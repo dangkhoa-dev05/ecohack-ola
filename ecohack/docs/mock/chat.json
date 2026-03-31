@@ -1,0 +1,12 @@
+{
+  "request": {
+    "message": "How can I help the environment today?"
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "reply": "Great question! Here's an eco-tip: Reducing single-use plastics is one of the easiest ways to help the environment. Try bringing a reusable bag and water bottle when you go out!"
+    },
+    "error": null
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "task_001",
+      "title": "Nhặt rác công viên",
+      "description": "Thu gom rác tại công viên gần bạn và chụp ảnh kết quả",
+      "rewardCredits": 50,
+      "latitude": 10.7769,
+      "longitude": 106.7009,
+      "category": "CLEANUP"
+    },
+    {
+      "id": "task_002",
+      "title": "Trồng cây xanh",
+      "description": "Trồng ít nhất 1 cây xanh tại khu vực được chỉ định",
+      "rewardCredits": 100,
+      "latitude": 10.7800,
+      "longitude": 106.6950,
+      "category": "PLANTING"
+    },
+    {
+      "id": "task_003",
+      "title": "Phân loại rác tái chế",
+      "description": "Phân loại và mang rác tái chế đến điểm thu gom",
+      "rewardCredits": 30,
+      "latitude": 10.7730,
+      "longitude": 106.7050,
+      "category": "RECYCLING"
+    },
+    {
+      "id": "task_004",
+      "title": "Dọn dẹp bãi biển",
+      "description": "Tham gia dọn dẹp bãi biển cùng cộng đồng",
+      "rewardCredits": 80,
+      "latitude": 10.3460,
+      "longitude": 107.0843,
+      "category": "CLEANUP"
+    }
+  ],
+  "error": null
+}

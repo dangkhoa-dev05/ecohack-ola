@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "level": 3,
+    "credits": 250,
+    "streak": 5,
+    "tasksCompleted": 12
+  },
+  "error": null
+}

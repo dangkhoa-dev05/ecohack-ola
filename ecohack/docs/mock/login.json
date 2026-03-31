@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "data": {
+    "token": "mock-jwt-token-abc123",
+    "user": {
+      "id": "user_001",
+      "displayName": "EcoWarrior",
+      "level": 3,
+      "credits": 250,
+      "streak": 5
+    }
+  },
+  "error": null
+}

@@ -1,0 +1,32 @@
+{
+  "init": {
+    "request": {
+      "taskId": "task_001",
+      "latitude": 10.7769,
+      "longitude": 106.7009
+    },
+    "response": {
+      "success": true,
+      "data": {
+        "submissionId": "sub_1711800000000",
+        "uploadUrl": "https://ecoquestblob.blob.core.windows.net/task-images/mock-upload-url"
+      },
+      "error": null
+    }
+  },
+  "complete": {
+    "request": {
+      "imageUrl": "https://ecoquestblob.blob.core.windows.net/task-images/photo123.jpg"
+    },
+    "response": {
+      "success": true,
+      "data": {
+        "id": "sub_1711800000000",
+        "taskId": "task_001",
+        "status": "PENDING_REVIEW",
+        "rewardCredits": 50
+      },
+      "error": null
+    }
+  }
+}
