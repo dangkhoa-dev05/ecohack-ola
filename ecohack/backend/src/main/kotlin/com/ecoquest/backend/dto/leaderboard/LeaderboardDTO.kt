@@ -1,4 +1,4 @@
-package com.ecoquest.backend.dto.Leaderboard
+package com.ecoquest.backend.dto.leaderboard
 
 data class LeaderboardDTO(
     val userId: String,
