@@ -1,6 +1,6 @@
 package com.ecoquest.backend.repositories.Leaderboard
 
-import com.ecoquest.backend.dto.Leaderboard.LeaderboardResponse
+import com.ecoquest.backend.dto.leaderboard.LeaderboardResponse
 import com.ecoquest.backend.entities.Leaderboard
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper

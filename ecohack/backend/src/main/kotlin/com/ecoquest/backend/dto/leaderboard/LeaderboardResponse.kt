@@ -1,8 +1,8 @@
-package com.ecoquest.backend.dto.Leaderboard
+package com.ecoquest.backend.dto.leaderboard
 
 import com.ecoquest.backend.entities.Leaderboard
 
-class LeaderboardResponse (
+data class LeaderboardResponse (
     val success: Boolean,
     val data: List<Leaderboard>,
     val error: String?

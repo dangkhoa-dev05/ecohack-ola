@@ -46,14 +46,15 @@ data class InitSubmissionResponse(
 )
 
 data class CompleteSubmissionRequest(
-    val imageUrl: String
+    val imageUrl: String?
 )
 
 data class SubmissionDto(
     val id: String,
     val taskId: String,
     val status: String,
-    val rewardCredits: Int
+    val rewardCredits: Int,
+    val rejectionReason: String? = null
 )
 
 data class StatsDto(

@@ -1,9 +1,9 @@
-package com.ecoquest.backend.dto
+package com.ecoquest.backend.dto.submission
 
 data class InitSubmissionRequest(
     val taskId: String,
-    val latitude: Double,
-    val longitude: Double
+    val latitude: Double?,
+    val longitude: Double?
 )
 
 data class InitSubmissionResponse(
@@ -12,12 +12,13 @@ data class InitSubmissionResponse(
 )
 
 data class CompleteSubmissionRequest(
-    val imageUrl: String
+    val imageUrl: String?
 )
 
 data class SubmissionDto(
     val id: String,
     val taskId: String,
     val status: String,
-    val rewardCredits: Int
+    val rewardCredits: Int,
+    val rejectionReason: String? = null
 )
