@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.ecoquest.app.ui.screens.HomeScreen
 import com.ecoquest.app.ui.screens.TaskListScreen
 
 object Routes {
+    const val HOME = "home"
     const val TASKS = "tasks"
 }
 
@@ -14,9 +16,16 @@ object Routes {
 fun EcoQuestNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Routes.TASKS) {
+    NavHost(navController = navController, startDestination = Routes.HOME) {
+        composable(Routes.HOME) {
+            HomeScreen(
+                onNavigateToTasks = { navController.navigate(Routes.TASKS) }
+            )
+        }
         composable(Routes.TASKS) {
-            TaskListScreen()
+            TaskListScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

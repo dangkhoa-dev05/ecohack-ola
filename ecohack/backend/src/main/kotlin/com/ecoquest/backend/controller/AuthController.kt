@@ -15,9 +15,13 @@ class AuthController {
     private val mockUser = UserDto(
         id = "user_001",
         displayName = "EcoWarrior",
+        email = "warrior@eco.com",
+        avatarUrl = null,
         level = 3,
         credits = 250,
-        streak = 5
+        streak = 5,
+        totalTasksCompleted = 12,
+        joinDate = "2026-03-01"
     )
 
     @PostMapping("/auth/login")

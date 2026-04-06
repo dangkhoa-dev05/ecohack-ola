@@ -7,5 +7,6 @@ data class TaskDto(
     val rewardCredits: Int,
     val latitude: Double,
     val longitude: Double,
-    val category: String
+    val category: String,
+    val distanceKm: Double? = null
 )

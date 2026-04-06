@@ -13,15 +13,20 @@ data class TaskDto(
     val rewardCredits: Int,
     val latitude: Double,
     val longitude: Double,
-    val category: String
+    val category: String,
+    val distanceKm: Double? = null
 )
 
 data class UserDto(
     val id: String,
     val displayName: String,
+    val email: String,
+    val avatarUrl: String?,
     val level: Int,
     val credits: Int,
-    val streak: Int
+    val streak: Int,
+    val totalTasksCompleted: Int,
+    val joinDate: String
 )
 
 data class LoginRequest(
