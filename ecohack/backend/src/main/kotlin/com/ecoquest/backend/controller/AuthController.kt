@@ -3,35 +3,22 @@ package com.ecoquest.backend.controller
 import com.ecoquest.backend.common.ApiResponse
 import com.ecoquest.backend.dto.LoginRequest
 import com.ecoquest.backend.dto.LoginResponse
-import com.ecoquest.backend.dto.UserDto
-import org.springframework.web.bind.annotation.GetMapping
+import com.ecoquest.backend.service.AuthService
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class AuthController {
-
-    private val mockUser = UserDto(
-        id = "user_001",
-        displayName = "EcoWarrior",
-        level = 3,
-        credits = 250,
-        streak = 5
-    )
+class AuthController(
+    private val authService: AuthService
+) {
 
     @PostMapping("/auth/login")
-    fun login(@RequestBody request: LoginRequest): ApiResponse<LoginResponse> {
-        return ApiResponse.success(
-            LoginResponse(
-                token = "mock-jwt-token-abc123",
-                user = mockUser
-            )
-        )
-    }
+    fun login(@Valid @RequestBody request: LoginRequest): ApiResponse<LoginResponse> {
+        val result = authService.login(request.email, request.password)
+            ?: return ApiResponse.error("Invalid email or password")
 
-    @GetMapping("/me")
-    fun me(): ApiResponse<UserDto> {
-        return ApiResponse.success(mockUser)
+        return ApiResponse.success(result)
     }
 }
