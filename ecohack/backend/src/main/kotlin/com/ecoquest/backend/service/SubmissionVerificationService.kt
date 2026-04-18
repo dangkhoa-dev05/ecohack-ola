@@ -8,23 +8,14 @@ class SubmissionVerificationService {
 
     fun verify(submission: Submission): VerificationResult {
         if (submission.imageUrl.isNullOrBlank()) {
-            return VerificationResult(
-                approved = false,
-                reason = "MISSING_IMAGE"
-            )
+            return VerificationResult(approved = false, reason = "MISSING_IMAGE")
         }
 
         if (submission.lat == null || submission.lng == null) {
-            return VerificationResult(
-                approved = false,
-                reason = "MISSING_LOCATION"
-            )
+            return VerificationResult(approved = false, reason = "MISSING_LOCATION")
         }
 
-        return VerificationResult(
-            approved = true,
-            reason = null
-        )
+        return VerificationResult(approved = true, reason = null)
     }
 }
 
