@@ -1,0 +1,8 @@
+.DS_Store
+
+# Android Studio / IntelliJ files under the app workspace
+/ecohack/.idea/
+/ecohack/*.iml
+
+# Ignore the module-local ignore file now that rules live here
+/ecohack/.gitignore
