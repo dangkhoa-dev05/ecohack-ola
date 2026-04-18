@@ -1,9 +1,11 @@
 plugins {
-	kotlin("jvm") version "1.9.0"
-	kotlin("plugin.spring") version "1.9.0"
-	id("org.springframework.boot") version "3.2.5"
+	kotlin("jvm") version "2.2.0"
+	kotlin("plugin.spring") version "2.2.0"
+	id("org.springframework.boot") version "3.5.11"
 	id("io.spring.dependency-management") version "1.1.5"
 }
+
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 group = "com.ecoquest"
 version = "0.0.1-SNAPSHOT"
@@ -11,7 +13,7 @@ description = "backend"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -32,10 +34,10 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs += listOf("-Xjsr305=strict")
-		jvmTarget = "17"
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+	compilerOptions {
+		freeCompilerArgs.add("-Xjsr305=strict")
+		jvmTarget.set(JvmTarget.JVM_21)
 	}
 }
 
