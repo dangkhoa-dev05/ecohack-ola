@@ -60,11 +60,7 @@ class SubmissionService(
         val record = store[id] ?: error("Submission $id not found")
         val now = Instant.now().toString()
 
-        val imageUrl = if (!request.imageUrl.isNullOrBlank()) {
-            request.imageUrl
-        } else {
-            record.uploadBlobUrl
-        }
+        val imageUrl = request.imageUrl
 
         val submission = Submission(
             id       = id,
