@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ecoquest.app.data.model.TaskDto
 import com.ecoquest.app.ui.theme.EcoGold
+import com.ecoquest.app.ui.viewmodel.SubmissionResult
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
 
 private const val MOCK_PHOTO_URL =
@@ -34,12 +33,23 @@ fun TaskListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.submitMessage, uiState.error) {
-        val msg = uiState.submitMessage ?: uiState.error
-        if (msg != null) {
-            snackbarHostState.showSnackbar(msg)
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            snackbarHostState.showSnackbar(uiState.error!!)
             viewModel.clearMessage()
         }
+    }
+
+    if (uiState.submissionResult != null) {
+        SubmissionResultDialog(
+            result = uiState.submissionResult!!,
+            onDismiss = { viewModel.dismissResult() },
+            onTryAgain = {
+                val task = uiState.submissionResult!!.task
+                viewModel.dismissResult()
+                viewModel.openCameraSheet(task)
+            }
+        )
     }
 
     if (uiState.cameraSheetTask != null) {
@@ -123,44 +133,71 @@ fun TaskListScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 8.dp)
-        ) { data ->
-            val isApproved = data.visuals.message.startsWith("Approved")
-            val isRejected = data.visuals.message.startsWith("Rejected")
-            Snackbar(
-                containerColor = when {
-                    isApproved -> MaterialTheme.colorScheme.primaryContainer
-                    isRejected -> MaterialTheme.colorScheme.errorContainer
-                    else -> MaterialTheme.colorScheme.inverseSurface
-                },
-                contentColor = when {
-                    isApproved -> MaterialTheme.colorScheme.onPrimaryContainer
-                    isRejected -> MaterialTheme.colorScheme.onErrorContainer
-                    else -> MaterialTheme.colorScheme.inverseOnSurface
-                }
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isApproved) {
-                        Icon(
-                            Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    } else if (isRejected) {
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(data.visuals.message)
-                }
-            }
-        }
+        )
     }
 }
 
+
+@Composable
+fun SubmissionResultDialog(
+    result: SubmissionResult,
+    onDismiss: () -> Unit,
+    onTryAgain: () -> Unit
+) {
+    if (result.isApproved) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Task Completed!") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "+${result.credits} credits earned",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Great job helping the environment!",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = onDismiss) {
+                    Text("Done")
+                }
+            }
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Submission Rejected") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Reason: ${result.reason ?: "Unknown"}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = "Please try again with the required proof.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = onTryAgain) {
+                    Text("Try Again")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = onDismiss) {
+                    Text("Dismiss")
+                }
+            }
+        )
+    }
+}
 
 @Composable
 fun TaskCard(
