@@ -10,6 +10,8 @@ import com.ecoquest.backend.enums.SubmissionStatus
 import com.ecoquest.backend.service.RewardService
 import com.ecoquest.backend.service.SubmissionVerificationService
 import org.springframework.web.bind.annotation.*
+import java.time.Instant
+import java.time.format.DateTimeParseException
 import java.util.concurrent.ConcurrentHashMap
 
 @RestController
@@ -44,20 +46,29 @@ class SubmissionController(
         val record = submissions[id]
             ?: return ApiResponse.error("Submission $id not found")
 
+        val capturedAt: Instant? = request.capturedAt?.let {
+            try {
+                Instant.parse(it)
+            } catch (_: DateTimeParseException) {
+                null
+            }
+        } ?: Instant.now()
+
         val submission = Submission(
             id = id,
             taskId = record.taskId,
             userId = "user_001",
             imageUrl = request.imageUrl,
             lat = record.latitude,
-            lng = record.longitude
+            lng = record.longitude,
+            capturedAt = capturedAt
         )
 
         val result = verificationService.verify(submission)
 
         return if (result.approved) {
             val taskCredits = TASK_REWARDS[record.taskId] ?: 50
-            val reward = rewardService.grantReward(submission.userId, taskCredits)
+            val reward = rewardService.onSubmissionApproved(submission.userId, taskCredits)
 
             submissions[id] = record.copy(status = SubmissionStatus.APPROVED)
 
@@ -66,7 +77,8 @@ class SubmissionController(
                     id = id,
                     taskId = record.taskId,
                     status = SubmissionStatus.APPROVED.name,
-                    rewardCredits = reward.creditsAwarded
+                    rewardCredits = reward.creditsAwarded,
+                    streak = reward.streak
                 )
             )
         } else {

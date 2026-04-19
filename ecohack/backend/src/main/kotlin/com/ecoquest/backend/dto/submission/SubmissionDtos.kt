@@ -12,7 +12,9 @@ data class InitSubmissionResponse(
 )
 
 data class CompleteSubmissionRequest(
-    val imageUrl: String?
+    val imageUrl: String?,
+    /** ISO-8601 timestamp of when the photo was captured. Optional. */
+    val capturedAt: String? = null
 )
 
 data class SubmissionDto(
@@ -20,5 +22,6 @@ data class SubmissionDto(
     val taskId: String,
     val status: String,
     val rewardCredits: Int,
+    val streak: Int? = null,
     val rejectionReason: String? = null
 )

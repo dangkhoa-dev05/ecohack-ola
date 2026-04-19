@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.SmartToy
@@ -15,7 +17,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ecoquest.app.ui.viewmodel.ChatMessage
@@ -28,6 +32,16 @@ fun ChatScreen(
     val uiState by viewModel.uiState.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val submit: (String) -> Unit = { text ->
+        val trimmed = text.trim()
+        if (trimmed.isNotEmpty() && !uiState.isSending) {
+            viewModel.sendMessage(trimmed)
+            inputText = ""
+            keyboardController?.hide()
+        }
+    }
 
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
@@ -44,7 +58,11 @@ fun ChatScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+        ) {
             if (uiState.messages.isEmpty() && !uiState.isSending) {
                 Box(
                     modifier = Modifier
@@ -80,11 +98,7 @@ fun ChatScreen(
                         )
                         suggestions.forEach { suggestion ->
                             SuggestionChip(
-                                onClick = {
-                                    inputText = suggestion
-                                    viewModel.sendMessage(suggestion)
-                                    inputText = ""
-                                },
+                                onClick = { submit(suggestion) },
                                 label = { Text(suggestion) },
                                 modifier = Modifier.padding(vertical = 2.dp)
                             )
@@ -123,16 +137,13 @@ fun ChatScreen(
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Type a message...") },
                     shape = RoundedCornerShape(24.dp),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { submit(inputText) })
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 FilledIconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            viewModel.sendMessage(inputText)
-                            inputText = ""
-                        }
-                    },
+                    onClick = { submit(inputText) },
                     enabled = inputText.isNotBlank() && !uiState.isSending
                 ) {
                     Icon(

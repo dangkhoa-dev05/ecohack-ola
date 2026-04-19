@@ -1,0 +1,13 @@
+.idea/
+
+.cursor/
+
+/build
+.gradle
+
+.DS_Store
+
+application.properties
+
+.cursor/
+

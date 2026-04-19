@@ -1,11 +1,34 @@
 package com.ecoquest.backend.service
 
+import com.ecoquest.backend.service.openai.AzureOpenAIClient
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
+/**
+ * JIRA-423 — Assistant chat service.
+ *
+ * Tries Azure OpenAI first. If the client is not configured or the remote
+ * call fails, falls back to a deterministic keyword-based canned reply so the
+ * Android chat screen always gets a response.
+ */
 @Service
-class ChatService {
+class ChatService(
+    private val openAIClient: AzureOpenAIClient
+) {
+    private val log = LoggerFactory.getLogger(ChatService::class.java)
 
     fun getReply(message: String): String {
+        val remote = try {
+            openAIClient.chat(message)
+        } catch (ex: Exception) {
+            log.warn("Unexpected error calling Azure OpenAI, falling back. {}", ex.message)
+            null
+        }
+
+        return remote ?: fallbackReply(message)
+    }
+
+    private fun fallbackReply(message: String): String {
         val lower = message.lowercase()
         return when {
             lower.containsAny("recycle", "recycling", "tái chế") ->
