@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,6 +76,7 @@ private val LoginOnPrimary = Color(0xFF00643A)
 @Composable
 fun LoginScreen(
     isLoading: Boolean = false,
+    errorMessage: String? = null,
     onLoginClick: (email: String, password: String) -> Unit = { _, _ -> }
 ) {
     var email by remember { mutableStateOf("") }
@@ -134,7 +136,20 @@ fun LoginScreen(
                             onValueChange = { email = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            placeholder = { Text("Enter your credentials") },
+                            placeholder = { Text("Enter your email") },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                disabledTextColor = Color.White,
+                                cursorColor = LoginPrimary,
+                                focusedBorderColor = LoginPrimary.copy(alpha = 0.5f),
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedContainerColor = LoginSurfaceHighest,
+                                unfocusedContainerColor = LoginSurfaceHighest,
+                                disabledContainerColor = LoginSurfaceHighest,
+                                focusedPlaceholderColor = LoginTextMuted.copy(alpha = 0.4f),
+                                unfocusedPlaceholderColor = LoginTextMuted.copy(alpha = 0.4f)
+                            ),
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Person,
@@ -174,6 +189,19 @@ fun LoginScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 placeholder = { Text("••••••••") },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    disabledTextColor = Color.White,
+                                    cursorColor = LoginPrimary,
+                                    focusedBorderColor = LoginPrimary.copy(alpha = 0.5f),
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedContainerColor = LoginSurfaceHighest,
+                                    unfocusedContainerColor = LoginSurfaceHighest,
+                                    disabledContainerColor = LoginSurfaceHighest,
+                                    focusedPlaceholderColor = LoginTextMuted.copy(alpha = 0.4f),
+                                    unfocusedPlaceholderColor = LoginTextMuted.copy(alpha = 0.4f)
+                                ),
                                 visualTransformation = PasswordVisualTransformation(),
                                 leadingIcon = {
                                     Icon(
@@ -198,6 +226,14 @@ fun LoginScreen(
                             enabled = email.isNotBlank() && password.isNotBlank() && !isLoading,
                             onClick = { onLoginClick(email.trim(), password) }
                         )
+
+                        if (errorMessage != null) {
+                            Text(
+                                text = errorMessage,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFFF8A80)
+                            )
+                        }
                     }
                 }
 

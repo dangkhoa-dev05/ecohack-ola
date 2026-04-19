@@ -27,12 +27,17 @@ import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Nature
+import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,8 +47,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ecoquest.app.data.model.User
+import com.ecoquest.app.data.model.xpRequiredForNextLevel
+import com.ecoquest.app.data.repository.CompletedTask
 import com.ecoquest.app.ui.theme.EcoQuestTheme
+import com.ecoquest.app.ui.viewmodel.ProfileViewModel
+import java.util.concurrent.TimeUnit
 
 private val ProfileBackground = Color(0xFF0B0F12)
 private val ProfileSurfaceLow = Color(0xFF0F1418)
@@ -68,30 +78,12 @@ private data class RecentTask(
 )
 
 @Composable
-fun ProfileScreen() {
-    val tasks = listOf(
-        RecentTask(
-            title = "Picked up 10 pieces of trash",
-            subtitle = "Green Park, Downtown • 2h ago",
-            reward = "+50",
-            accent = ProfilePrimary,
-            icon = Icons.Default.DeleteOutline
-        ),
-        RecentTask(
-            title = "Planted a native sapling",
-            subtitle = "Home Garden • Yesterday",
-            reward = "+250",
-            accent = ProfilePrimary,
-            icon = Icons.Default.Nature
-        ),
-        RecentTask(
-            title = "Switched to LED bulbs",
-            subtitle = "Verified via Photo • 2 days ago",
-            reward = "+100",
-            accent = ProfilePrimary,
-            icon = Icons.Default.ElectricBolt
-        )
-    )
+fun ProfileScreen(
+    viewModel: ProfileViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val user = uiState.user
+    val tasks = uiState.recentTasks.map { it.toRecentTask() }
 
     Box(
         modifier = Modifier
@@ -100,18 +92,48 @@ fun ProfileScreen() {
     ) {
         ProfileBackgroundDecor()
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(28.dp)
-        ) {
-            ProfileHero()
-            ProfileStatsGrid()
-            RecentTasksSection(tasks)
-            Spacer(modifier = Modifier.height(24.dp))
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = ProfilePrimaryBright
+                )
+            }
+
+            user == null -> {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = uiState.error ?: "No profile available.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = ProfileTextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.loadProfile() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .navigationBarsPadding()
+                        .padding(horizontal = 24.dp, vertical = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(28.dp)
+                ) {
+                    ProfileHero(user = user)
+                    ProfileStatsGrid(user = user)
+                    RecentTasksSection(tasks)
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
         }
     }
 }
@@ -123,7 +145,7 @@ private fun ProfileBackgroundDecor() {
 }
 
 @Composable
-private fun ProfileHero() {
+private fun ProfileHero(user: User) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -159,7 +181,7 @@ private fun ProfileHero() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "AR",
+                    text = user.displayName.initials(),
                     color = ProfileTextPrimary,
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold
@@ -169,17 +191,20 @@ private fun ProfileHero() {
 
         Spacer(modifier = Modifier.height(18.dp))
         Text(
-            text = "Alex River",
+            text = user.displayName,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = ProfileTextPrimary
         )
-        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 
 @Composable
-private fun ProfileStatsGrid() {
+private fun ProfileStatsGrid(user: User) {
+    val xpCurrent = user.xp
+    val xpTarget = xpRequiredForNextLevel(user.level)
+    val progress = (xpCurrent.toFloat() / xpTarget.toFloat()).coerceIn(0f, 1f)
+
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Card(
             colors = CardDefaults.cardColors(containerColor = ProfileSurfaceLow),
@@ -204,14 +229,14 @@ private fun ProfileStatsGrid() {
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Lv. 24",
+                                text = "Lv. ${user.level}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 color = ProfileTextPrimary,
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }
                         Text(
-                            text = "2,450 / 3,000 XP",
+                            text = "$xpCurrent / $xpTarget XP",
                             style = MaterialTheme.typography.bodyMedium,
                             color = ProfilePrimary,
                             fontWeight = FontWeight.Bold
@@ -228,7 +253,7 @@ private fun ProfileStatsGrid() {
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.81f)
+                                .fillMaxWidth(progress)
                                 .fillMaxSize()
                                 .background(
                                     brush = Brush.horizontalGradient(
@@ -256,18 +281,27 @@ private fun ProfileStatsGrid() {
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Eco,
                 iconTint = ProfileTertiary,
-                value = "12,840",
+                value = user.credits.toString(),
                 label = "Bio Credits"
             )
             SquareStatCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.LocalFireDepartment,
                 iconTint = ProfileError,
-                value = "14 Days",
+                value = "${user.streak} Days",
                 label = "Sproutling Streak"
             )
         }
     }
+}
+
+private fun String.initials(): String {
+    return trim()
+        .split("\\s+".toRegex())
+        .filter { it.isNotEmpty() }
+        .take(2)
+        .joinToString("") { it.first().uppercase() }
+        .ifBlank { "U" }
 }
 
 @Composable
@@ -325,71 +359,123 @@ private fun RecentTasksSection(tasks: List<RecentTask>) {
             fontWeight = FontWeight.Bold
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            tasks.forEach { task ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Box(
-                        modifier = Modifier.width(56.dp),
-                        contentAlignment = Alignment.TopCenter
+        if (tasks.isEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = ProfileSurfaceLow),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Text(
+                    text = "Complete a daily task to see it here.",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ProfileTextMuted
+                )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                tasks.forEach { task ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(ProfileSurfaceHighest),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = task.icon,
-                                    contentDescription = null,
-                                    tint = task.accent,
-                                    modifier = Modifier.size(22.dp)
-                                )
+                        Box(
+                            modifier = Modifier.width(56.dp),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(ProfileSurfaceHighest),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = task.icon,
+                                        contentDescription = null,
+                                        tint = task.accent,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = ProfileSurfaceLow),
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            colors = CardDefaults.cardColors(containerColor = ProfileSurfaceLow),
+                            shape = RoundedCornerShape(18.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Text(
+                                        text = task.title,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = ProfileTextPrimary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = task.reward,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = ProfilePrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = task.title,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = ProfileTextPrimary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = task.reward,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = ProfilePrimary,
-                                    fontWeight = FontWeight.Bold
+                                    text = task.subtitle,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = ProfileTextMuted
                                 )
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = task.subtitle,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = ProfileTextMuted
-                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private fun CompletedTask.toRecentTask(): RecentTask {
+    return RecentTask(
+        title = title,
+        subtitle = "${categoryLabel(category)} • ${relativeCompletedTime(completedAtMillis)}",
+        reward = "+$rewardCredits",
+        accent = ProfilePrimary,
+        icon = categoryIcon(category)
+    )
+}
+
+private fun categoryIcon(category: String) = when (category.uppercase()) {
+    "CLEANUP" -> Icons.Default.DeleteOutline
+    "PLANTING" -> Icons.Default.Nature
+    "RECYCLING" -> Icons.Default.Eco
+    "ENERGY" -> Icons.Default.ElectricBolt
+    else -> Icons.Default.TaskAlt
+}
+
+private fun categoryLabel(category: String): String {
+    return category.lowercase()
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}
+
+private fun relativeCompletedTime(completedAtMillis: Long): String {
+    val elapsedMillis = (System.currentTimeMillis() - completedAtMillis).coerceAtLeast(0L)
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedMillis)
+    val hours = TimeUnit.MILLISECONDS.toHours(elapsedMillis)
+    val days = TimeUnit.MILLISECONDS.toDays(elapsedMillis)
+
+    return when {
+        minutes < 1 -> "Just now"
+        minutes < 60 -> "${minutes}m ago"
+        hours < 24 -> "${hours}h ago"
+        days == 1L -> "Yesterday"
+        else -> "${days}d ago"
     }
 }
 

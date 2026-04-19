@@ -8,7 +8,8 @@ class ProfileService(
     private val mockUserStore: MockUserStore
 ) {
 
-    fun getCurrentProfile(): UserDto {
-        return mockUserStore.getCurrentUser()
+    fun getCurrentProfile(userId: String): UserDto {
+        return mockUserStore.findById(userId)
+            ?: throw IllegalArgumentException("User $userId not found")
     }
 }

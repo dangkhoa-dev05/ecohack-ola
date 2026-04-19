@@ -2,10 +2,12 @@ package com.ecoquest.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ecoquest.app.data.api.RetrofitClient
-import com.ecoquest.app.data.model.CompleteSubmissionRequest
-import com.ecoquest.app.data.model.InitSubmissionRequest
 import com.ecoquest.app.data.model.TaskDto
+import com.ecoquest.app.data.model.applyTaskReward
+import com.ecoquest.app.data.repository.RepositoryProvider
+import com.ecoquest.app.data.repository.TaskHistoryRepository
+import com.ecoquest.app.data.repository.TaskRepository
+import com.ecoquest.app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,29 +21,22 @@ data class TaskUiState(
     val submittingTaskId: String? = null
 )
 
-class TaskViewModel : ViewModel() {
+class TaskViewModel(
+    private val taskRepository: TaskRepository = RepositoryProvider.taskRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
-
-    private val api = RetrofitClient.api
 
     fun loadDailyTasks() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = api.getDailyTasks()
-                if (response.success && response.data != null) {
-                    _uiState.value = _uiState.value.copy(
-                        tasks = response.data,
-                        isLoading = false
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        error = response.error ?: "Failed to load tasks",
-                        isLoading = false
-                    )
-                }
+                _uiState.value = _uiState.value.copy(
+                    tasks = taskRepository.getDailyTasks(),
+                    isLoading = false
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Network error",
@@ -58,45 +53,23 @@ class TaskViewModel : ViewModel() {
                 submittingTaskId = task.id
             )
             try {
-                val initResponse = api.initSubmission(
-                    InitSubmissionRequest(
-                        taskId = task.id,
-                        latitude = task.latitude,
-                        longitude = task.longitude
-                    )
-                )
-                if (!initResponse.success || initResponse.data == null) {
-                    _uiState.value = _uiState.value.copy(
-                        error = initResponse.error ?: "Failed to init submission",
-                        submittingTaskId = null
-                    )
-                    return@launch
-                }
-
-                val submissionId = initResponse.data.submissionId
-
-                val completeResponse = api.completeSubmission(
-                    id = submissionId,
-                    request = CompleteSubmissionRequest(imageUrl = imageUrl)
-                )
-
-                if (completeResponse.success && completeResponse.data != null) {
-                    val result = completeResponse.data
-                    val message = when (result.status) {
-                        "APPROVED" -> "Approved! +${result.rewardCredits} credits earned"
-                        "REJECTED" -> "Rejected: ${formatReason(result.rejectionReason)}"
-                        else -> "Status: ${result.status}"
+                val result = taskRepository.submitTask(task, imageUrl)
+                if (result.status == "APPROVED") {
+                    TaskHistoryRepository.recordCompletedTask(task, result.rewardCredits)
+                    userRepository.getCurrentUser()?.let { user ->
+                        userRepository.updateCurrentUser(user.applyTaskReward(result.rewardCredits))
                     }
-                    _uiState.value = _uiState.value.copy(
-                        submitMessage = message,
-                        submittingTaskId = null
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        error = completeResponse.error ?: "Submission failed",
-                        submittingTaskId = null
-                    )
                 }
+                val message = when (result.status) {
+                    "APPROVED" -> "Approved! +${result.rewardCredits} credits earned"
+                    "REJECTED" -> "Rejected: ${formatReason(result.rejectionReason)}"
+                    else -> "Status: ${result.status}"
+                }
+                _uiState.value = _uiState.value.copy(
+                    tasks = _uiState.value.tasks.filterNot { it.id == task.id },
+                    submitMessage = message,
+                    submittingTaskId = null
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Network error",

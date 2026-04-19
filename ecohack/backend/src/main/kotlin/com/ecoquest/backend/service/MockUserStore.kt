@@ -9,7 +9,6 @@ class MockUserStore {
     data class MockAuthUser(
         val email: String,
         val password: String,
-        val token: String,
         val user: UserDto
     )
 
@@ -17,7 +16,6 @@ class MockUserStore {
         MockAuthUser(
             email = "demo@ecoquest.app",
             password = "pass123",
-            token = "mock-token-demo",
             user = UserDto(
                 id = "user_001",
                 displayName = "EcoWarrior",
@@ -29,7 +27,6 @@ class MockUserStore {
         MockAuthUser(
             email = "admin@ecoquest.app",
             password = "admin123",
-            token = "mock-token-admin",
             user = UserDto(
                 id = "user_002",
                 displayName = "EcoAdmin",
@@ -47,7 +44,7 @@ class MockUserStore {
         }
     }
 
-    fun getCurrentUser(): UserDto {
-        return users.first().user
+    fun findById(userId: String): UserDto? {
+        return users.firstOrNull { it.user.id == userId }?.user
     }
 }

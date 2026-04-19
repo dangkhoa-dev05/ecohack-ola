@@ -1,5 +1,6 @@
 package com.ecoquest.backend.controller
 
+import com.ecoquest.backend.service.JwtService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -18,6 +19,9 @@ class AuthControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @Autowired
+    lateinit var jwtService: JwtService
+
     @Test
     fun `login returns success for valid credentials`() {
         mockMvc.perform(
@@ -27,7 +31,7 @@ class AuthControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.token").value("mock-token-demo"))
+            .andExpect(jsonPath("$.data.token").isNotEmpty)
             .andExpect(jsonPath("$.data.user.id").value("user_001"))
     }
 
@@ -54,8 +58,19 @@ class AuthControllerTest {
     }
 
     @Test
-    fun `me returns mock user`() {
+    fun `me requires authentication`() {
         mockMvc.perform(get("/me"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `me returns authenticated user`() {
+        val token = jwtService.generateToken("user_001")
+
+        mockMvc.perform(
+            get("/me")
+                .header("Authorization", "Bearer $token")
+        )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.id").value("user_001"))
