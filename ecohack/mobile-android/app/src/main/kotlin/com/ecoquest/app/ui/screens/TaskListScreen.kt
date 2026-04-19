@@ -1,5 +1,7 @@
 package com.ecoquest.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,22 +12,62 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ecoquest.app.data.model.TaskDto
 import com.ecoquest.app.ui.theme.EcoGold
 import com.ecoquest.app.ui.viewmodel.SubmissionResult
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
-
-private const val MOCK_PHOTO_URL =
-    "https://ecoquestblob.blob.core.windows.net/task-images/mock-photo.jpg"
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Environment
+import androidx.core.content.ContextCompat
+import java.io.File
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    var pendingTask by remember { mutableStateOf<TaskDto?>(null) }
+    var cameraUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val task = pendingTask
+        pendingTask = null
+        if (success && task != null && cameraUri != null) {
+            viewModel.submitTask(task, cameraUri.toString())
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        val task = pendingTask
+        pendingTask = null
+        if (uri != null && task != null) {
+            viewModel.submitTask(task, uri.toString())
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            cameraUri?.let { cameraLauncher.launch(it) }
+        } else {
+            pendingTask = null
+            cameraUri = null
+            viewModel.setError("Camera permission denied")
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadDailyTasks()
@@ -61,7 +103,27 @@ fun TaskListScreen(
             confirmButton = {
                 Button(onClick = {
                     viewModel.closeCameraSheet()
-                    viewModel.submitTask(task, MOCK_PHOTO_URL)
+                    try {
+                        val picturesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                        val photoFile = File(picturesDir, "photo_${System.currentTimeMillis()}.jpg")
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            photoFile
+                        )
+                        pendingTask = task
+                        cameraUri = uri
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (hasPermission) {
+                            cameraLauncher.launch(uri)
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    } catch (e: Exception) {
+                        viewModel.setError("Could not open camera: ${e.message}")
+                    }
                 }) {
                     Text("Take Photo")
                 }
@@ -69,7 +131,8 @@ fun TaskListScreen(
             dismissButton = {
                 OutlinedButton(onClick = {
                     viewModel.closeCameraSheet()
-                    viewModel.submitTask(task, MOCK_PHOTO_URL)
+                    pendingTask = task
+                    galleryLauncher.launch("image/*")
                 }) {
                     Text("From Gallery")
                 }
