@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -179,6 +182,7 @@ fun TaskListScreen(
                         TaskCard(
                             task = task,
                             isSubmitting = uiState.submittingTaskId == task.id,
+                            submissionState = uiState.taskStates[task.id],
                             onSubmitWithPhoto = {
                                 viewModel.openCameraSheet(task)
                             },
@@ -266,6 +270,7 @@ fun SubmissionResultDialog(
 fun TaskCard(
     task: TaskDto,
     isSubmitting: Boolean,
+    submissionState: String?,
     onSubmitWithPhoto: () -> Unit,
     onSubmitWithoutPhoto: () -> Unit
 ) {
@@ -322,38 +327,112 @@ fun TaskCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onSubmitWithPhoto,
-                    enabled = !isSubmitting,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
+            when (submissionState) {
+                "APPROVED" -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.PhotoCamera,
+                            imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Approved — +${task.rewardCredits} credits earned",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2E7D32)
                         )
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Submit")
                 }
-
-                OutlinedButton(
-                    onClick = onSubmitWithoutPhoto,
-                    enabled = !isSubmitting,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("No Photo")
+                "REJECTED" -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Rejected — tap Submit to try again",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onSubmitWithPhoto,
+                            enabled = !isSubmitting,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (isSubmitting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoCamera,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Retry")
+                        }
+                        OutlinedButton(
+                            onClick = onSubmitWithoutPhoto,
+                            enabled = !isSubmitting,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("No Photo")
+                        }
+                    }
+                }
+                else -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onSubmitWithPhoto,
+                            enabled = !isSubmitting,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (isSubmitting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoCamera,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Submit")
+                        }
+                        OutlinedButton(
+                            onClick = onSubmitWithoutPhoto,
+                            enabled = !isSubmitting,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("No Photo")
+                        }
+                    }
                 }
             }
         }

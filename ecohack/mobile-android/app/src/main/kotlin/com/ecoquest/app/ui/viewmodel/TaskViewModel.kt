@@ -24,7 +24,8 @@ data class TaskUiState(
     val error: String? = null,
     val submittingTaskId: String? = null,
     val cameraSheetTask: TaskDto? = null,
-    val submissionResult: SubmissionResult? = null
+    val submissionResult: SubmissionResult? = null,
+    val taskStates: Map<String, String> = emptyMap()
 )
 
 class TaskViewModel : ViewModel() {
@@ -90,6 +91,7 @@ class TaskViewModel : ViewModel() {
 
                 if (completeResponse.success && completeResponse.data != null) {
                     val result = completeResponse.data
+                    val newTaskStates = _uiState.value.taskStates + (task.id to result.status)
                     _uiState.value = _uiState.value.copy(
                         submissionResult = SubmissionResult(
                             isApproved = result.status == "APPROVED",
@@ -97,6 +99,7 @@ class TaskViewModel : ViewModel() {
                             reason = formatReason(result.rejectionReason),
                             task = task
                         ),
+                        taskStates = newTaskStates,
                         submittingTaskId = null
                     )
                 } else {
