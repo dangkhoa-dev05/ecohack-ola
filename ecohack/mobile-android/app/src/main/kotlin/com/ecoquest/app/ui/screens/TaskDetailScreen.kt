@@ -25,6 +25,7 @@ import com.ecoquest.app.ui.viewmodel.TaskDetailViewModel
 fun TaskDetailScreen(
     taskId: String,
     onBack: () -> Unit,
+    onSubmitProof: (String, String) -> Unit = { _, _ -> },
     viewModel: TaskDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -203,7 +204,7 @@ fun TaskDetailScreen(
 
                         // Submit button
                         Button(
-                            onClick = { /* TODO: navigate to submission flow */ },
+                            onClick = { onSubmitProof(task.id, task.title) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
