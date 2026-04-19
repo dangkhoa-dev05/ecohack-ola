@@ -22,6 +22,9 @@ interface EcoQuestApi {
         @Query("lng") lng: Double
     ): ApiResponse<List<TaskDto>>
 
+    @GET("tasks/{id}")
+    suspend fun getTaskById(@Path("id") id: String): ApiResponse<TaskDto>
+
     // Submissions
     @POST("submissions/init")
     suspend fun initSubmission(@Body request: InitSubmissionRequest): ApiResponse<InitSubmissionResponse>

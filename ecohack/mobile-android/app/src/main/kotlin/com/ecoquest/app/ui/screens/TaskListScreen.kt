@@ -22,6 +22,7 @@ import com.ecoquest.app.ui.viewmodel.TaskViewModel
 @Composable
 fun TaskListScreen(
     onBack: (() -> Unit)? = null,
+    onTaskClick: (String) -> Unit = {},
     viewModel: TaskViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -105,7 +106,8 @@ fun TaskListScreen(
                         items(uiState.tasks) { task ->
                             TaskCard(
                                 task = task,
-                                onSubmit = { viewModel.submitTask(task) }
+                                onSubmit = { viewModel.submitTask(task) },
+                                onClick = { onTaskClick(task.id) }
                             )
                         }
                     }
@@ -118,11 +120,13 @@ fun TaskListScreen(
 @Composable
 fun TaskCard(
     task: TaskDto,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
