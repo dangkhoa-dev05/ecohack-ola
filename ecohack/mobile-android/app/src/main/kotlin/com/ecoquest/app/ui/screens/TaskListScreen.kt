@@ -19,6 +19,9 @@ import com.ecoquest.app.data.model.TaskDto
 import com.ecoquest.app.ui.theme.EcoGold
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
 
+private const val MOCK_PHOTO_URL =
+    "https://ecoquestblob.blob.core.windows.net/task-images/mock-photo.jpg"
+
 @Composable
 fun TaskListScreen(
     viewModel: TaskViewModel = viewModel()
@@ -37,6 +40,31 @@ fun TaskListScreen(
             snackbarHostState.showSnackbar(msg)
             viewModel.clearMessage()
         }
+    }
+
+    if (uiState.cameraSheetTask != null) {
+        val task = uiState.cameraSheetTask!!
+        AlertDialog(
+            onDismissRequest = { viewModel.closeCameraSheet() },
+            title = { Text("Add Photo Proof") },
+            text = { Text("Choose how to add a photo for \"${task.title}\".") },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.closeCameraSheet()
+                    viewModel.submitTask(task, MOCK_PHOTO_URL)
+                }) {
+                    Text("Take Photo")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = {
+                    viewModel.closeCameraSheet()
+                    viewModel.submitTask(task, MOCK_PHOTO_URL)
+                }) {
+                    Text("From Gallery")
+                }
+            }
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -79,10 +107,7 @@ fun TaskListScreen(
                             task = task,
                             isSubmitting = uiState.submittingTaskId == task.id,
                             onSubmitWithPhoto = {
-                                viewModel.submitTask(
-                                    task,
-                                    "https://ecoquestblob.blob.core.windows.net/task-images/mock-photo.jpg"
-                                )
+                                viewModel.openCameraSheet(task)
                             },
                             onSubmitWithoutPhoto = {
                                 viewModel.submitTask(task, null)
@@ -135,6 +160,7 @@ fun TaskListScreen(
         }
     }
 }
+
 
 @Composable
 fun TaskCard(

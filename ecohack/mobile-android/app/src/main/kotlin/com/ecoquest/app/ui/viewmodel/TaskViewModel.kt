@@ -16,7 +16,8 @@ data class TaskUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val submitMessage: String? = null,
-    val submittingTaskId: String? = null
+    val submittingTaskId: String? = null,
+    val cameraSheetTask: TaskDto? = null
 )
 
 class TaskViewModel : ViewModel() {
@@ -104,6 +105,14 @@ class TaskViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    fun openCameraSheet(task: TaskDto) {
+        _uiState.value = _uiState.value.copy(cameraSheetTask = task)
+    }
+
+    fun closeCameraSheet() {
+        _uiState.value = _uiState.value.copy(cameraSheetTask = null)
     }
 
     fun clearMessage() {
