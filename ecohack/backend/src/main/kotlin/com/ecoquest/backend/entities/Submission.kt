@@ -11,6 +11,7 @@ data class Submission(
     val imageUrl: String?,
     val lat: Double?,
     val lng: Double?,
+    val capturedAt: Instant? = null,
     val status: SubmissionStatus = SubmissionStatus.PENDING_REVIEW,
     val rejectionReason: RejectionReason? = null
 )
