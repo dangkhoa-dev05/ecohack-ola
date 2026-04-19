@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,11 +17,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ecoquest.app.ui.screens.ChatScreen
 import com.ecoquest.app.ui.screens.LeaderboardScreen
+import com.ecoquest.app.ui.screens.SubmissionHistoryScreen
 import com.ecoquest.app.ui.screens.TaskListScreen
 
 object Routes {
     const val TASKS = "tasks"
     const val LEADERBOARD = "leaderboard"
+    const val HISTORY = "history"
     const val CHAT = "chat"
 }
 
@@ -33,6 +36,7 @@ data class BottomNavItem(
 private val bottomNavItems = listOf(
     BottomNavItem(Routes.TASKS, "Tasks", Icons.Default.TaskAlt),
     BottomNavItem(Routes.LEADERBOARD, "Leaderboard", Icons.Default.EmojiEvents),
+    BottomNavItem(Routes.HISTORY, "History", Icons.Default.History),
     BottomNavItem(Routes.CHAT, "Chat", Icons.Default.Chat)
 )
 
@@ -86,6 +90,9 @@ fun EcoQuestNavGraph() {
             }
             composable(Routes.LEADERBOARD) {
                 LeaderboardScreen()
+            }
+            composable(Routes.HISTORY) {
+                SubmissionHistoryScreen()
             }
             composable(Routes.CHAT) {
                 ChatScreen()
