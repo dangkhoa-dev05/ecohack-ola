@@ -18,12 +18,16 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        buildConfigField("String", "BASE_URL", "\"http://10.20.185.50:8081/\"")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "true")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -9,23 +9,62 @@
       "success": true,
       "data": {
         "submissionId": "sub_1711800000000",
-        "uploadUrl": "https://ecoquestblob.blob.core.windows.net/task-images/mock-upload-url"
+        "uploadUrl": "https://ecoquestblob.blob.core.windows.net/task-images/sub_1711800000000.jpg?sv=mock-sas-token&sp=w&se=mock-expiry",
+        "uploadUrlExpiresAt": "2026-04-18T10:15:00Z"
       },
       "error": null
     }
   },
   "complete": {
     "request": {
-      "imageUrl": "https://ecoquestblob.blob.core.windows.net/task-images/photo123.jpg"
+      "imageUrl": "https://ecoquestblob.blob.core.windows.net/task-images/sub_1711800000000.jpg"
     },
-    "response": {
+    "response_approved": {
       "success": true,
       "data": {
         "id": "sub_1711800000000",
         "taskId": "task_001",
-        "status": "PENDING_REVIEW",
-        "rewardCredits": 50
+        "status": "APPROVED",
+        "rewardCredits": 50,
+        "rejectionReason": null,
+        "createdAt": "2026-04-18T10:00:00Z",
+        "updatedAt": "2026-04-18T10:01:30Z"
       },
+      "error": null
+    },
+    "response_rejected": {
+      "success": true,
+      "data": {
+        "id": "sub_1711800000000",
+        "taskId": "task_001",
+        "status": "REJECTED",
+        "rewardCredits": 0,
+        "rejectionReason": "MISSING_IMAGE",
+        "createdAt": "2026-04-18T10:00:00Z",
+        "updatedAt": "2026-04-18T10:01:30Z"
+      },
+      "error": null
+    }
+  },
+  "list": {
+    "response": {
+      "success": true,
+      "data": [
+        {
+          "id": "sub_1711800000000",
+          "taskId": "task_001",
+          "status": "APPROVED",
+          "rewardCredits": 50,
+          "createdAt": "2026-04-18T10:00:00Z"
+        },
+        {
+          "id": "sub_1711799000000",
+          "taskId": "task_003",
+          "status": "REJECTED",
+          "rewardCredits": 0,
+          "createdAt": "2026-04-17T08:30:00Z"
+        }
+      ],
       "error": null
     }
   }

@@ -1,69 +1,140 @@
 package com.ecoquest.app.ui.navigation
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ecoquest.app.ui.screens.ChatScreen
+import com.ecoquest.app.ui.screens.LeaderboardScreen
 import com.ecoquest.app.ui.screens.LoginScreen
-import com.ecoquest.app.ui.screens.MainScreen
-import com.ecoquest.app.ui.screens.SubmitProofScreen
-import com.ecoquest.app.ui.screens.TaskDetailScreen
+import com.ecoquest.app.ui.screens.ProfileScreen
+import com.ecoquest.app.ui.screens.SubmissionHistoryScreen
+import com.ecoquest.app.ui.screens.TaskListScreen
+import com.ecoquest.app.ui.viewmodel.AuthViewModel
 
 object Routes {
     const val LOGIN = "login"
-    const val MAIN = "main"
-    const val TASK_DETAIL = "tasks/{taskId}"
-    const val SUBMIT_PROOF = "submit/{taskId}/{taskTitle}"
-
-    fun taskDetail(taskId: String) = "tasks/$taskId"
-    fun submitProof(taskId: String, taskTitle: String) =
-        "submit/$taskId/${java.net.URLEncoder.encode(taskTitle, "UTF-8")}"
+    const val TASKS = "tasks"
+    const val LEADERBOARD = "leaderboard"
+    const val HISTORY = "history"
+    const val CHAT = "chat"
+    const val PROFILE = "profile"
 }
 
+data class BottomNavItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector
+)
+
+private val bottomNavItems = listOf(
+    BottomNavItem(Routes.TASKS, "Tasks", Icons.Default.TaskAlt),
+    BottomNavItem(Routes.LEADERBOARD, "Leaderboard", Icons.Default.EmojiEvents),
+    BottomNavItem(Routes.HISTORY, "History", Icons.Default.History),
+    BottomNavItem(Routes.CHAT, "Chat", Icons.Default.Chat),
+    BottomNavItem(Routes.PROFILE, "Profile", Icons.Default.Person)
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EcoQuestNavGraph() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showAppChrome = currentRoute != Routes.LOGIN
 
-    NavHost(navController = navController, startDestination = Routes.LOGIN) {
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+    Scaffold(
+        topBar = {
+            if (showAppChrome) {
+                TopAppBar(
+                    title = { Text("EcoQuest") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
+        },
+        bottomBar = {
+            if (showAppChrome) {
+                NavigationBar {
+                    bottomNavItems.forEach { item ->
+                        NavigationBarItem(
+                            selected = currentRoute == item.route,
+                            onClick = {
+                                if (currentRoute != item.route) {
+                                    navController.navigate(item.route) {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            icon = { Icon(item.icon, contentDescription = item.label) },
+                            label = { Text(item.label) }
+                        )
                     }
                 }
-            )
+            }
         }
-        composable(Routes.MAIN) {
-            MainScreen(
-                onNavigateToTaskDetail = { taskId ->
-                    navController.navigate(Routes.taskDetail(taskId))
-                },
-                onNavigateToSubmitProof = { taskId, title ->
-                    navController.navigate(Routes.submitProof(taskId, title))
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = Routes.LOGIN,
+            modifier = Modifier.padding(padding)
+        ) {
+            composable(Routes.LOGIN) {
+                val authViewModel: AuthViewModel = viewModel()
+                val authUiState by authViewModel.uiState.collectAsState()
+
+                LaunchedEffect(authUiState.isLoggedIn) {
+                    if (authUiState.isLoggedIn) {
+                        navController.navigate(Routes.TASKS) {
+                            popUpTo(Routes.LOGIN) {
+                                inclusive = true
+                            }
+                        }
+                    }
                 }
-            )
-        }
-        composable(Routes.TASK_DETAIL) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
-            TaskDetailScreen(
-                taskId = taskId,
-                onBack = { navController.popBackStack() },
-                onSubmitProof = { id, title ->
-                    navController.navigate(Routes.submitProof(id, title))
-                }
-            )
-        }
-        composable(Routes.SUBMIT_PROOF) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
-            val taskTitle = backStackEntry.arguments?.getString("taskTitle")?.let {
-                java.net.URLDecoder.decode(it, "UTF-8")
-            } ?: "Task"
-            SubmitProofScreen(
-                taskId = taskId,
-                taskTitle = taskTitle,
-                onBack = { navController.popBackStack() }
-            )
+
+                LoginScreen(
+                    isLoading = authUiState.isLoading,
+                    errorMessage = authUiState.error,
+                    onLoginClick = authViewModel::login
+                )
+            }
+            composable(Routes.TASKS) {
+                TaskListScreen()
+            }
+            composable(Routes.LEADERBOARD) {
+                LeaderboardScreen()
+            }
+            composable(Routes.HISTORY) {
+                SubmissionHistoryScreen()
+            }
+            composable(Routes.CHAT) {
+                ChatScreen()
+            }
+            composable(Routes.PROFILE) {
+                ProfileScreen()
+            }
         }
     }
 }

@@ -13,6 +13,15 @@ object RetrofitClient {
         OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val token = AuthTokenStore.getToken()
+                val request = chain.request().newBuilder().apply {
+                    if (!token.isNullOrBlank()) {
+                        header("Authorization", "Bearer $token")
+                    }
+                }.build()
+                chain.proceed(request)
+            }
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
                     level = if (BuildConfig.DEBUG)
