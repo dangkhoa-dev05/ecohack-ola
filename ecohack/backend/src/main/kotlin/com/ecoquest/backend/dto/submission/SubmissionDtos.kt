@@ -8,7 +8,8 @@ data class InitSubmissionRequest(
 
 data class InitSubmissionResponse(
     val submissionId: String,
-    val uploadUrl: String
+    val uploadUrl: String,
+    val uploadUrlExpiresAt: String
 )
 
 data class CompleteSubmissionRequest(
@@ -22,6 +23,16 @@ data class SubmissionDto(
     val taskId: String,
     val status: String,
     val rewardCredits: Int,
+    val rejectionReason: String? = null,
     val streak: Int? = null,
-    val rejectionReason: String? = null
+    val createdAt: String,
+    val updatedAt: String
+)
+
+data class SubmissionSummaryDto(
+    val id: String,
+    val taskId: String,
+    val status: String,
+    val rewardCredits: Int,
+    val createdAt: String
 )

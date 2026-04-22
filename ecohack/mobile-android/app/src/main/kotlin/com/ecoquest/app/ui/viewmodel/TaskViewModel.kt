@@ -13,12 +13,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+data class SubmissionResult(
+    val isApproved: Boolean,
+    val credits: Int,
+    val reason: String?,
+    val task: TaskDto
+)
+
 data class TaskUiState(
     val tasks: List<TaskDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val submitMessage: String? = null,
-    val submittingTaskId: String? = null
+    val submittingTaskId: String? = null,
+    val cameraSheetTask: TaskDto? = null,
+    val submissionResult: SubmissionResult? = null,
+    val taskStates: Map<String, String> = emptyMap()
 )
 
 class TaskViewModel(
@@ -49,8 +58,8 @@ class TaskViewModel(
     fun submitTask(task: TaskDto, imageUrl: String?) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
-                submitMessage = null,
-                submittingTaskId = task.id
+                submittingTaskId = task.id,
+                submissionResult = null
             )
             try {
                 val result = taskRepository.submitTask(task, imageUrl)
@@ -60,14 +69,15 @@ class TaskViewModel(
                         userRepository.updateCurrentUser(user.applyTaskReward(result.rewardCredits))
                     }
                 }
-                val message = when (result.status) {
-                    "APPROVED" -> "Approved! +${result.rewardCredits} credits earned"
-                    "REJECTED" -> "Rejected: ${formatReason(result.rejectionReason)}"
-                    else -> "Status: ${result.status}"
-                }
+                val newTaskStates = _uiState.value.taskStates + (task.id to result.status)
                 _uiState.value = _uiState.value.copy(
-                    tasks = _uiState.value.tasks.filterNot { it.id == task.id },
-                    submitMessage = message,
+                    submissionResult = SubmissionResult(
+                        isApproved = result.status == "APPROVED",
+                        credits = result.rewardCredits,
+                        reason = formatReason(result.rejectionReason),
+                        task = task
+                    ),
+                    taskStates = newTaskStates,
                     submittingTaskId = null
                 )
             } catch (e: Exception) {
@@ -79,8 +89,24 @@ class TaskViewModel(
         }
     }
 
+    fun openCameraSheet(task: TaskDto) {
+        _uiState.value = _uiState.value.copy(cameraSheetTask = task)
+    }
+
+    fun closeCameraSheet() {
+        _uiState.value = _uiState.value.copy(cameraSheetTask = null)
+    }
+
+    fun dismissResult() {
+        _uiState.value = _uiState.value.copy(submissionResult = null)
+    }
+
+    fun setError(message: String) {
+        _uiState.value = _uiState.value.copy(error = message)
+    }
+
     fun clearMessage() {
-        _uiState.value = _uiState.value.copy(submitMessage = null, error = null)
+        _uiState.value = _uiState.value.copy(error = null)
     }
 
     private fun formatReason(reason: String?): String = when (reason) {
