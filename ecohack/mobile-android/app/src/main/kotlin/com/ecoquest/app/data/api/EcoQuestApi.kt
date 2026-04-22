@@ -39,7 +39,7 @@ interface EcoQuestApi {
     @GET("me/stats")
     suspend fun getStats(): ApiResponse<StatsDto>
 
-    @GET("leaderboard")
+    @GET("api/v1/leaderboard")
     suspend fun getLeaderboard(): ApiResponse<List<LeaderboardEntryDto>>
 
     // AI Assistant

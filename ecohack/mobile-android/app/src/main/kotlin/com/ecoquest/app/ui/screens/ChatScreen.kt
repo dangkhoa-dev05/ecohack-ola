@@ -32,7 +32,6 @@ fun ChatScreen(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    // Auto-scroll to bottom when new message arrives
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
             listState.animateScrollToItem(uiState.messages.size - 1)
@@ -40,7 +39,6 @@ fun ChatScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,7 +68,6 @@ fun ChatScreen(
             }
         }
 
-        // Messages
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -83,7 +80,6 @@ fun ChatScreen(
                 ChatBubble(message = message)
             }
 
-            // Suggestion chips (show only when just the welcome message)
             if (uiState.messages.size == 1) {
                 item {
                     SuggestionChips(
@@ -101,14 +97,12 @@ fun ChatScreen(
             }
         }
 
-        // Input bar
         Surface(
             tonalElevation = 3.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier
-                    .padding(12.dp),
+                modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(

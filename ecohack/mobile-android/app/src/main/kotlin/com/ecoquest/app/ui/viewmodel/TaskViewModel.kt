@@ -3,6 +3,7 @@ package com.ecoquest.app.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ecoquest.app.data.api.RetrofitClient
+import com.ecoquest.app.data.model.CompleteSubmissionRequest
 import com.ecoquest.app.data.model.InitSubmissionRequest
 import com.ecoquest.app.data.model.TaskDto
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ data class TaskUiState(
     val tasks: List<TaskDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val submitMessage: String? = null
+    val submitMessage: String? = null,
+    val submittingTaskId: String? = null
 )
 
 class TaskViewModel : ViewModel() {
@@ -49,25 +51,56 @@ class TaskViewModel : ViewModel() {
         }
     }
 
-    fun submitTask(task: TaskDto) {
+    fun submitTask(task: TaskDto, imageUrl: String?) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(submitMessage = null)
+            _uiState.value = _uiState.value.copy(
+                submitMessage = null,
+                submittingTaskId = task.id
+            )
             try {
-                val response = api.initSubmission(
+                val initResponse = api.initSubmission(
                     InitSubmissionRequest(
                         taskId = task.id,
                         latitude = task.latitude,
                         longitude = task.longitude
                     )
                 )
-                if (response.success && response.data != null) {
+                if (!initResponse.success || initResponse.data == null) {
                     _uiState.value = _uiState.value.copy(
-                        submitMessage = "Submission created: ${response.data.submissionId}"
+                        error = initResponse.error ?: "Failed to init submission",
+                        submittingTaskId = null
+                    )
+                    return@launch
+                }
+
+                val submissionId = initResponse.data.submissionId
+
+                val completeResponse = api.completeSubmission(
+                    id = submissionId,
+                    request = CompleteSubmissionRequest(imageUrl = imageUrl)
+                )
+
+                if (completeResponse.success && completeResponse.data != null) {
+                    val result = completeResponse.data
+                    val message = when (result.status) {
+                        "APPROVED" -> "Approved! +${result.rewardCredits} credits earned"
+                        "REJECTED" -> "Rejected: ${formatReason(result.rejectionReason)}"
+                        else -> "Status: ${result.status}"
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        submitMessage = message,
+                        submittingTaskId = null
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = completeResponse.error ?: "Submission failed",
+                        submittingTaskId = null
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Submit failed"
+                    error = e.message ?: "Network error",
+                    submittingTaskId = null
                 )
             }
         }
@@ -75,5 +108,11 @@ class TaskViewModel : ViewModel() {
 
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(submitMessage = null, error = null)
+    }
+
+    private fun formatReason(reason: String?): String = when (reason) {
+        "MISSING_IMAGE" -> "Image is required"
+        "MISSING_LOCATION" -> "Location is required"
+        else -> reason ?: "Unknown reason"
     }
 }

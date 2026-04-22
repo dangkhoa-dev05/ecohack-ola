@@ -1,6 +1,6 @@
-package com.ecoquest.backend.dto
+package com.ecoquest.backend.entities
 
-data class LeaderboardEntryDto(
+data class Leaderboard(
     val rank: Int,
     val displayName: String,
     val credits: Int,

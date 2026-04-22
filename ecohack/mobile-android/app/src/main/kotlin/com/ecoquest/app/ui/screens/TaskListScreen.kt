@@ -4,9 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +19,6 @@ import com.ecoquest.app.data.model.TaskDto
 import com.ecoquest.app.ui.theme.EcoGold
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(
     onBack: (() -> Unit)? = null,
@@ -41,76 +41,98 @@ fun TaskListScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Daily Tasks") },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
                 )
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+            }
+            uiState.tasks.isEmpty() && uiState.error != null -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = uiState.error ?: "Unknown error",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.loadDailyTasks() }) {
+                        Text("Retry")
+                    }
                 }
-                uiState.tasks.isEmpty() && uiState.error != null -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+            }
+            else -> {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
                         Text(
-                            text = uiState.error ?: "Unknown error",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
+                            text = "Daily Tasks",
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadDailyTasks() }) {
-                            Text("Retry")
-                        }
+                    }
+                    items(uiState.tasks) { task ->
+                        TaskCard(
+                            task = task,
+                            isSubmitting = uiState.submittingTaskId == task.id,
+                            onClick = { onTaskClick(task.id) },
+                            onSubmitWithPhoto = {
+                                viewModel.submitTask(
+                                    task,
+                                    "https://ecoquestblob.blob.core.windows.net/task-images/mock-photo.jpg"
+                                )
+                            },
+                            onSubmitWithoutPhoto = {
+                                viewModel.submitTask(task, null)
+                            }
+                        )
                     }
                 }
-                else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        item {
-                            Text(
-                                text = "Daily Tasks",
-                                style = MaterialTheme.typography.headlineMedium,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                        }
-                        items(uiState.tasks) { task ->
-                            TaskCard(
-                                task = task,
-                                onSubmit = { viewModel.submitTask(task) },
-                                onClick = { onTaskClick(task.id) }
-                            )
-                        }
+            }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp)
+        ) { data ->
+            val isApproved = data.visuals.message.startsWith("Approved")
+            val isRejected = data.visuals.message.startsWith("Rejected")
+            Snackbar(
+                containerColor = when {
+                    isApproved -> MaterialTheme.colorScheme.primaryContainer
+                    isRejected -> MaterialTheme.colorScheme.errorContainer
+                    else -> MaterialTheme.colorScheme.inverseSurface
+                },
+                contentColor = when {
+                    isApproved -> MaterialTheme.colorScheme.onPrimaryContainer
+                    isRejected -> MaterialTheme.colorScheme.onErrorContainer
+                    else -> MaterialTheme.colorScheme.inverseOnSurface
+                }
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isApproved) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    } else if (isRejected) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
+                    Text(data.visuals.message)
                 }
             }
         }
@@ -120,7 +142,9 @@ fun TaskListScreen(
 @Composable
 fun TaskCard(
     task: TaskDto,
-    onSubmit: () -> Unit,
+    isSubmitting: Boolean,
+    onSubmitWithPhoto: () -> Unit,
+    onSubmitWithoutPhoto: () -> Unit,
     onClick: () -> Unit = {}
 ) {
     Card(
@@ -159,32 +183,56 @@ fun TaskCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        tint = EcoGold,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "+${task.rewardCredits} credits",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = EcoGold,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "+${task.rewardCredits} credits",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
-                Button(onClick = onSubmit) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onSubmitWithPhoto,
+                    enabled = !isSubmitting,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Submit")
+                }
+
+                OutlinedButton(
+                    onClick = onSubmitWithoutPhoto,
+                    enabled = !isSubmitting,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("No Photo")
                 }
             }
         }
