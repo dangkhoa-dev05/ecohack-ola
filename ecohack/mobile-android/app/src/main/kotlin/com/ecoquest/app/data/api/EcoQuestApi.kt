@@ -5,14 +5,12 @@ import retrofit2.http.*
 
 interface EcoQuestApi {
 
-    // Auth
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): ApiResponse<LoginResponse>
 
     @GET("me")
     suspend fun getMe(): ApiResponse<UserDto>
 
-    // Tasks
     @GET("tasks/daily")
     suspend fun getDailyTasks(): ApiResponse<List<TaskDto>>
 
@@ -22,7 +20,6 @@ interface EcoQuestApi {
         @Query("lng") lng: Double
     ): ApiResponse<List<TaskDto>>
 
-    // Submissions
     @POST("submissions/init")
     suspend fun initSubmission(@Body request: InitSubmissionRequest): ApiResponse<InitSubmissionResponse>
 
@@ -32,14 +29,20 @@ interface EcoQuestApi {
         @Body request: CompleteSubmissionRequest
     ): ApiResponse<SubmissionDto>
 
-    // Rewards
+    @GET("submissions/{id}")
+    suspend fun getSubmission(@Path("id") id: String): ApiResponse<SubmissionDto>
+
+    @GET("submissions")
+    suspend fun listSubmissions(
+        @Query("userId") userId: String = "user_001"
+    ): ApiResponse<List<SubmissionSummaryDto>>
+
     @GET("me/stats")
     suspend fun getStats(): ApiResponse<StatsDto>
 
     @GET("api/v1/leaderboard")
     suspend fun getLeaderboard(): ApiResponse<List<LeaderboardEntryDto>>
 
-    // AI Assistant
     @POST("assistant/chat")
     suspend fun chat(@Body request: ChatRequest): ApiResponse<ChatResponse>
 }

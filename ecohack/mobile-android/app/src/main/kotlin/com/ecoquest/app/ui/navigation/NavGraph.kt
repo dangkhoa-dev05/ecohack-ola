@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.*
@@ -22,6 +23,7 @@ import com.ecoquest.app.ui.screens.ChatScreen
 import com.ecoquest.app.ui.screens.LeaderboardScreen
 import com.ecoquest.app.ui.screens.LoginScreen
 import com.ecoquest.app.ui.screens.ProfileScreen
+import com.ecoquest.app.ui.screens.SubmissionHistoryScreen
 import com.ecoquest.app.ui.screens.TaskListScreen
 import com.ecoquest.app.ui.viewmodel.AuthViewModel
 
@@ -29,6 +31,7 @@ object Routes {
     const val LOGIN = "login"
     const val TASKS = "tasks"
     const val LEADERBOARD = "leaderboard"
+    const val HISTORY = "history"
     const val CHAT = "chat"
     const val PROFILE = "profile"
 }
@@ -42,6 +45,7 @@ data class BottomNavItem(
 private val bottomNavItems = listOf(
     BottomNavItem(Routes.TASKS, "Tasks", Icons.Default.TaskAlt),
     BottomNavItem(Routes.LEADERBOARD, "Leaderboard", Icons.Default.EmojiEvents),
+    BottomNavItem(Routes.HISTORY, "History", Icons.Default.History),
     BottomNavItem(Routes.CHAT, "Chat", Icons.Default.Chat),
     BottomNavItem(Routes.PROFILE, "Profile", Icons.Default.Person)
 )
@@ -121,6 +125,9 @@ fun EcoQuestNavGraph() {
             }
             composable(Routes.LEADERBOARD) {
                 LeaderboardScreen()
+            }
+            composable(Routes.HISTORY) {
+                SubmissionHistoryScreen()
             }
             composable(Routes.CHAT) {
                 ChatScreen()

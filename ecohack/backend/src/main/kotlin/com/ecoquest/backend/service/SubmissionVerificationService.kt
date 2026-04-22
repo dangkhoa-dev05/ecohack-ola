@@ -71,9 +71,9 @@ class SubmissionVerificationService(
 data class VerificationResult(
     val approved: Boolean,
     val reason: String?,
-    val ruleName: String?,
-    val message: String?,
-    val vision: VisionAnalysis?
+    val ruleName: String? = null,
+    val message: String? = null,
+    val vision: VisionAnalysis? = null
 ) {
     val rejectionReason: RejectionReason?
         get() = reason?.let { runCatching { RejectionReason.valueOf(it) }.getOrNull() }
