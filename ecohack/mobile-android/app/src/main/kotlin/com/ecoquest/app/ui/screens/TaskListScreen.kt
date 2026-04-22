@@ -32,6 +32,8 @@ import java.io.File
 
 @Composable
 fun TaskListScreen(
+    onBack: (() -> Unit)? = null,
+    onTaskClick: (String) -> Unit = {},
     viewModel: TaskViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -183,6 +185,7 @@ fun TaskListScreen(
                             task = task,
                             isSubmitting = uiState.submittingTaskId == task.id,
                             submissionState = uiState.taskStates[task.id],
+                            onClick = { onTaskClick(task.id) },
                             onSubmitWithPhoto = {
                                 viewModel.openCameraSheet(task)
                             },
@@ -272,11 +275,13 @@ fun TaskCard(
     isSubmitting: Boolean,
     submissionState: String?,
     onSubmitWithPhoto: () -> Unit,
-    onSubmitWithoutPhoto: () -> Unit
+    onSubmitWithoutPhoto: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

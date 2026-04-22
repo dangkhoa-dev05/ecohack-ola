@@ -16,9 +16,10 @@ data class ChatMessage(
 )
 
 data class ChatUiState(
-    val messages: List<ChatMessage> = emptyList(),
-    val isSending: Boolean = false,
-    val error: String? = null
+    val messages: List<ChatMessage> = listOf(
+        ChatMessage("Hi! I'm EcoBot 🌱 Ask me anything about eco-friendly living, recycling, or how to earn more credits!", isUser = false)
+    ),
+    val isLoading: Boolean = false
 )
 
 class ChatViewModel : ViewModel() {
@@ -29,40 +30,32 @@ class ChatViewModel : ViewModel() {
     private val api = RetrofitClient.api
 
     fun sendMessage(text: String) {
-        if (text.isBlank()) return
-
-        val userMessage = ChatMessage(text = text, isUser = true)
-        _uiState.value = _uiState.value.copy(
-            messages = _uiState.value.messages + userMessage,
-            isSending = true,
-            error = null
-        )
+        val updatedMessages = _uiState.value.messages + ChatMessage(text, isUser = true)
+        _uiState.value = _uiState.value.copy(messages = updatedMessages, isLoading = true)
 
         viewModelScope.launch {
             try {
-                val response = api.chat(ChatRequest(message = text))
+                val response = api.chat(ChatRequest(text))
                 if (response.success && response.data != null) {
-                    val botMessage = ChatMessage(text = response.data.reply, isUser = false)
+                    val botReply = ChatMessage(response.data.reply, isUser = false)
                     _uiState.value = _uiState.value.copy(
-                        messages = _uiState.value.messages + botMessage,
-                        isSending = false
+                        messages = _uiState.value.messages + botReply,
+                        isLoading = false
                     )
                 } else {
+                    val errorMsg = ChatMessage("Sorry, I couldn't process that. Please try again.", isUser = false)
                     _uiState.value = _uiState.value.copy(
-                        error = response.error ?: "Failed to get reply",
-                        isSending = false
+                        messages = _uiState.value.messages + errorMsg,
+                        isLoading = false
                     )
                 }
             } catch (e: Exception) {
+                val errorMsg = ChatMessage("Connection error. Please check your network.", isUser = false)
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
-                    isSending = false
+                    messages = _uiState.value.messages + errorMsg,
+                    isLoading = false
                 )
             }
         }
-    }
-
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
     }
 }
