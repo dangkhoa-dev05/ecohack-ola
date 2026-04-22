@@ -22,8 +22,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "true")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
