@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
@@ -24,31 +25,29 @@ class JwtAuthenticationFilter(
     ) {
         val authHeader = request.getHeader("Authorization")
 
-        if (authHeader.isNullOrBlank() || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response)
-            return
-        }
+        if (!authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ")) {
+            val token = authHeader.removePrefix("Bearer ").trim()
 
-        val token = authHeader.removePrefix("Bearer ").trim()
-        if (token.isBlank() || !jwtService.isTokenValid(token)) {
-            filterChain.doFilter(request, response)
-            return
-        }
+            if (token.isNotBlank() && jwtService.isTokenValid(token)) {
+                val userId = jwtService.extractUserId(token)
+                val currentAuth = SecurityContextHolder.getContext().authentication
 
-        val userId = jwtService.extractUserId(token)
-        val user = mockUserStore.findById(userId)
-        val currentAuthentication = SecurityContextHolder.getContext().authentication
+                if (currentAuth == null) {
+                    val user = mockUserStore.findById(userId)
 
-        if (user != null && currentAuthentication == null) {
-            val authentication = UsernamePasswordAuthenticationToken(
-                user.id,
-                null,
-                emptyList()
-            ).apply {
-                details = WebAuthenticationDetailsSource().buildDetails(request)
+                    if (user != null) {
+                        val authentication = UsernamePasswordAuthenticationToken(
+                            user.id,
+                            null,
+                            listOf(SimpleGrantedAuthority("ROLE_USER"))
+                        ).apply {
+                            details = WebAuthenticationDetailsSource().buildDetails(request)
+                        }
+
+                        SecurityContextHolder.getContext().authentication = authentication
+                    }
+                }
             }
-
-            SecurityContextHolder.getContext().authentication = authentication
         }
 
         filterChain.doFilter(request, response)

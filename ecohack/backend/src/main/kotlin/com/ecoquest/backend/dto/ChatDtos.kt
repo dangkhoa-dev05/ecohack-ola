@@ -7,3 +7,9 @@ data class ChatRequest(
 data class ChatResponse(
     val reply: String
 )
+
+data class ExplainRejectionRequest(
+    val rejectionReason: String?,
+    val rejectionMessage: String? = null,
+    val taskId: String? = null
+)

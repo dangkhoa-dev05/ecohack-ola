@@ -48,11 +48,12 @@ class MockUserStore {
     fun findByCredentials(email: String, password: String): MockAuthUser? {
         return users.firstOrNull {
             it.email.equals(email.trim(), ignoreCase = true) &&
-                    it.password == password
+                it.password == password
         }
     }
 
-    fun findById(userId: String): UserDto? {
-        return users.firstOrNull { it.user.id == userId }?.user
-    }
+    fun findById(userId: String): UserDto? =
+        users.firstOrNull { it.user.id == userId }?.user
+
+    fun allUsers(): List<UserDto> = users.map { it.user }
 }
