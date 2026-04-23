@@ -1,5 +1,6 @@
 package com.ecoquest.backend.service
 
+import com.ecoquest.backend.enums.RejectionReason
 import com.ecoquest.backend.service.openai.AzureOpenAIClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -26,6 +27,30 @@ class ChatService(
         }
 
         return remote ?: fallbackReply(message)
+    }
+
+    fun explainRejection(
+        rejectionReason: String?,
+        rejectionMessage: String?,
+        taskId: String?
+    ): String {
+        val reason = RejectionReason.fromNameOrNull(rejectionReason)
+        val prompt = buildString {
+            append("A user's eco-task submission was rejected. ")
+            append("Explain clearly why and how to fix it in 2-3 short bullet points. ")
+            append("Tone should be supportive and concise. ")
+            reason?.let { append("Reason code: ${it.name}. Reason label: ${it.label}. Hint: ${it.hint}. ") }
+            rejectionMessage?.takeIf { it.isNotBlank() }?.let { append("Technical detail: $it. ") }
+            taskId?.takeIf { it.isNotBlank() }?.let { append("Task id: $it. ") }
+        }
+
+        val remote = try {
+            openAIClient.chat(prompt)
+        } catch (ex: Exception) {
+            log.warn("Unexpected error calling Azure OpenAI for rejection explanation: {}", ex.message)
+            null
+        }
+        return remote ?: fallbackRejectionExplanation(reason, rejectionMessage)
     }
 
     private fun fallbackReply(message: String): String {
@@ -68,6 +93,22 @@ class ChatService(
                 "Great question! Here's an eco-tip: Reducing single-use plastics is one of the easiest ways " +
                 "to help the environment. Try bringing a reusable bag and water bottle when you go out! " +
                 "Feel free to ask me about recycling, planting, energy saving, or community cleanups."
+        }
+    }
+
+    private fun fallbackRejectionExplanation(
+        reason: RejectionReason?,
+        rejectionMessage: String?
+    ): String {
+        val title = reason?.label ?: "Submission could not be verified"
+        val hint = reason?.hint
+            ?: "Please retry with a clearer photo, valid GPS, and a fresh timestamp."
+        val detail = rejectionMessage?.takeIf { it.isNotBlank() } ?: "No extra technical details provided."
+        return buildString {
+            append("Why it was rejected: $title.\n")
+            append("- What happened: $detail\n")
+            append("- How to fix: $hint\n")
+            append("- Try again after updating the proof and resubmitting.")
         }
     }
 

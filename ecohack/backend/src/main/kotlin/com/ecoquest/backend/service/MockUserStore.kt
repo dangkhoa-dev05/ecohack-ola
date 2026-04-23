@@ -19,9 +19,13 @@ class MockUserStore {
             user = UserDto(
                 id = "user_001",
                 displayName = "EcoWarrior",
+                email = "demo@ecoquest.app",
+                avatarUrl = null,
                 level = 3,
                 credits = 250,
-                streak = 5
+                streak = 5,
+                totalTasksCompleted = 12,
+                joinDate = "2025-01-15"
             )
         ),
         MockAuthUser(
@@ -30,9 +34,13 @@ class MockUserStore {
             user = UserDto(
                 id = "user_002",
                 displayName = "EcoAdmin",
+                email = "admin@ecoquest.app",
+                avatarUrl = null,
                 level = 8,
                 credits = 920,
-                streak = 12
+                streak = 12,
+                totalTasksCompleted = 40,
+                joinDate = "2024-09-01"
             )
         )
     )
@@ -40,11 +48,12 @@ class MockUserStore {
     fun findByCredentials(email: String, password: String): MockAuthUser? {
         return users.firstOrNull {
             it.email.equals(email.trim(), ignoreCase = true) &&
-                    it.password == password
+                it.password == password
         }
     }
 
-    fun findById(userId: String): UserDto? {
-        return users.firstOrNull { it.user.id == userId }?.user
-    }
+    fun findById(userId: String): UserDto? =
+        users.firstOrNull { it.user.id == userId }?.user
+
+    fun allUsers(): List<UserDto> = users.map { it.user }
 }

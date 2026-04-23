@@ -24,6 +24,8 @@ data class SubmissionDto(
     val status: String,
     val rewardCredits: Int,
     val rejectionReason: String? = null,
+    val rejectionReasonLabel: String? = null,
+    val rejectionMessage: String? = null,
     val streak: Int? = null,
     val createdAt: String,
     val updatedAt: String
