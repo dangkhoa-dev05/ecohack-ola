@@ -81,9 +81,16 @@ fun SubmitProofScreen(
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color(0xFFEAF4EA),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.submit_proof_title)) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.submit_proof_title),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = androidx.compose.ui.graphics.Color(0xFF1F3D27)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -94,8 +101,8 @@ fun SubmitProofScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFEAF4EA),
+                    titleContentColor = androidx.compose.ui.graphics.Color(0xFF1F3D27)
                 )
             )
         }
@@ -104,7 +111,7 @@ fun SubmitProofScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(androidx.compose.ui.graphics.Color(0xFFF5F0E8))
+                .background(androidx.compose.ui.graphics.Color(0xFFEAF4EA))
                 .padding(horizontal = EcoDimens.ScreenHorizontal, vertical = EcoDimens.ScreenVertical),
             verticalArrangement = Arrangement.spacedBy(EcoDimens.SectionGap)
         ) {
@@ -262,7 +269,7 @@ fun SubmitProofScreen(
                     .fillMaxWidth()
                     .height(EcoDimens.LargeActionHeight),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF5D842B)),
                 enabled = uiState.photoUri != null && !uiState.isLoading && !uiState.submitted
             ) {
                 if (uiState.isLoading) {

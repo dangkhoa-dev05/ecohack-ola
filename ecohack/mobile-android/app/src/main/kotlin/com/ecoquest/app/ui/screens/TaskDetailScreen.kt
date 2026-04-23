@@ -42,9 +42,16 @@ fun TaskDetailScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFFEAF4EA),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.task_detail_title)) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.task_detail_title),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF1F3D27)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -55,8 +62,8 @@ fun TaskDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFFEAF4EA),
+                    titleContentColor = Color(0xFF1F3D27)
                 )
             )
         }
@@ -102,7 +109,7 @@ fun TaskDetailScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFFF5F0E8))
+                            .background(Color(0xFFEAF4EA))
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = EcoDimens.ScreenHorizontal, vertical = EcoDimens.ScreenVertical),
                         verticalArrangement = Arrangement.spacedBy(EcoDimens.SectionGap)
@@ -232,9 +239,7 @@ fun TaskDetailScreen(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = EcoGreen
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D842B))
                         ) {
                             Text("📸", fontSize = 20.sp)
                             Spacer(modifier = Modifier.width(8.dp))

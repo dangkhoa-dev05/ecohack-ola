@@ -43,7 +43,7 @@ fun SettingsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F0E8))
+            .background(Color(0xFFEAF4EA))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = EcoDimens.ScreenHorizontal, vertical = EcoDimens.ScreenVertical),
         verticalArrangement = Arrangement.spacedBy(EcoDimens.SectionGap)
@@ -130,7 +130,7 @@ fun SettingsScreen() {
         // Cute footer message
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F9E7)),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
         ) {
             Row(

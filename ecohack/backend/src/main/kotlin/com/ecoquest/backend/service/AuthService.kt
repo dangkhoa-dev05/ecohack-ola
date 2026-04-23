@@ -5,15 +5,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuthService(
-    private val mockUserStore: MockUserStore,
-    private val jwtService: JwtService
+    private val mockUserStore: MockUserStore
 ) {
 
     fun login(email: String, password: String): LoginResponse? {
         val match = mockUserStore.findByCredentials(email, password) ?: return null
 
         return LoginResponse(
-            token = jwtService.generateToken(match.user.id),
+            token = "mock-jwt-token-${match.user.id}",
             user = match.user
         )
     }

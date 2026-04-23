@@ -20,7 +20,8 @@ class RewardController(
 
     @GetMapping("/me/stats")
     fun getStats(): ApiResponse<StatsDto> {
-        val base = mockUserStore.getCurrentUser()
+        val base = mockUserStore.findById("user_001")
+            ?: return ApiResponse.error("User not found")
         val grantedCredits = rewardService.getCredits(base.id)
         val grantedStreak = rewardService.getStreak(base.id)
 

@@ -51,23 +51,29 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ecoquest.app.data.model.User
 import com.ecoquest.app.data.model.xpRequiredForNextLevel
 import com.ecoquest.app.data.repository.CompletedTask
+import com.ecoquest.app.ui.components.AnimatedFlowerDecor
+import com.ecoquest.app.ui.components.AnimatedLeafDecor
+import com.ecoquest.app.ui.components.AnimatedNatureBackdrop
+import com.ecoquest.app.ui.components.AnimatedStarDecor
+import com.ecoquest.app.ui.components.NatureBackdropStyle
+import com.ecoquest.app.ui.components.OrbitSparkRing
 import com.ecoquest.app.ui.theme.EcoQuestTheme
 import com.ecoquest.app.ui.viewmodel.ProfileViewModel
 import java.util.concurrent.TimeUnit
 
-private val ProfileBackground = Color(0xFF0B0F12)
-private val ProfileSurfaceLow = Color(0xFF0F1418)
-private val ProfileSurface = Color(0xFF151A1F)
-private val ProfileSurfaceHigh = Color(0xFF1B2025)
-private val ProfileSurfaceHighest = Color(0xFF21262C)
-private val ProfileTextPrimary = Color(0xFFEBEEF4)
-private val ProfileTextMuted = Color(0xFFA8ABB1)
-private val ProfileOutline = Color(0xFF44484D)
-private val ProfilePrimary = Color(0xFFA1FFC2)
-private val ProfilePrimaryBright = Color(0xFF00FC9A)
-private val ProfilePrimaryDim = Color(0xFF00EC90)
-private val ProfileTertiary = Color(0xFF77DFFF)
-private val ProfileError = Color(0xFFFF716C)
+private val ProfileBackground = Color(0xFFEAF4EA)
+private val ProfileSurfaceLow = Color(0xFFF8FCF4)
+private val ProfileSurface = Color(0xFFFFFFFF)
+private val ProfileSurfaceHigh = Color(0xFFF4F9EC)
+private val ProfileSurfaceHighest = Color(0xFFECF4E2)
+private val ProfileTextPrimary = Color(0xFF1F3D27)
+private val ProfileTextMuted = Color(0xFF6A7F69)
+private val ProfileOutline = Color(0xFFD8E4CE)
+private val ProfilePrimary = Color(0xFF6F943C)
+private val ProfilePrimaryBright = Color(0xFF8AB351)
+private val ProfilePrimaryDim = Color(0xFF5D842B)
+private val ProfileTertiary = Color(0xFF4B8F6E)
+private val ProfileError = Color(0xFFC74E4E)
 
 private data class RecentTask(
     val title: String,
@@ -141,6 +147,38 @@ fun ProfileScreen(
 @Composable
 private fun ProfileBackgroundDecor() {
     Box(modifier = Modifier.fillMaxSize()) {
+        AnimatedNatureBackdrop(style = NatureBackdropStyle.EcoBot)
+        AnimatedLeafDecor(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 8.dp, top = 92.dp),
+            size = 132.dp,
+            alpha = 0.20f,
+            delayMs = 400
+        )
+        AnimatedFlowerDecor(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 124.dp, end = 12.dp),
+            size = 104.dp,
+            alpha = 0.18f,
+            delayMs = 600
+        )
+        OrbitSparkRing(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 156.dp, end = 28.dp),
+            radius = 44.dp,
+            color = ProfilePrimaryBright.copy(alpha = 0.75f)
+        )
+        AnimatedStarDecor(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 26.dp, bottom = 140.dp),
+            size = 42.dp,
+            alpha = 0.26f,
+            delayMs = 900
+        )
     }
 }
 
@@ -169,13 +207,13 @@ private fun ProfileHero(user: User) {
                     .size(116.dp)
                     .clip(CircleShape)
                     .background(ProfileSurface)
-                    .border(width = 4.dp, color = Color(0xFF00EC90), shape = CircleShape)
+                    .border(width = 4.dp, color = Color(0xFF7FA94A), shape = CircleShape)
                     .padding(6.dp)
                     .background(ProfileSurface, CircleShape)
                     .clip(CircleShape)
                     .background(
                         brush = Brush.linearGradient(
-                            colors = listOf(Color(0xFF183529), Color(0xFF0F1418))
+                            colors = listOf(Color(0xFF89B057), Color(0xFF6E9343))
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -196,7 +234,31 @@ private fun ProfileHero(user: User) {
             fontWeight = FontWeight.Bold,
             color = ProfileTextPrimary
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Eco profile with your live progress, streak energy, and recent wins.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = ProfileTextMuted
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ProfileHeroBadge(text = "${user.credits} credits")
+            ProfileHeroBadge(text = "${user.streak} day streak")
+        }
     }
+}
+
+@Composable
+private fun ProfileHeroBadge(text: String) {
+    Text(
+        text = text,
+        color = ProfileTextPrimary,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .background(ProfileSurfaceLow.copy(alpha = 0.92f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    )
 }
 
 @Composable
@@ -267,7 +329,7 @@ private fun ProfileStatsGrid(user: User) {
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = ProfileTextPrimary.copy(alpha = 0.05f),
+                    tint = ProfilePrimary.copy(alpha = 0.10f),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(10.dp)
