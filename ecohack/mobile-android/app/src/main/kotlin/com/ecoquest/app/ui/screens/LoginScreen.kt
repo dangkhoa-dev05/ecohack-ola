@@ -74,10 +74,11 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color(0xFFEAF4EA))
     ) {
-        AnimatedNatureBackdrop(
-            style = NatureBackdropStyle.EcoBot,
-            sparkleCount = 11
-        )
+        // Temporarily disabled for debugging
+        // AnimatedNatureBackdrop(
+        //     style = NatureBackdropStyle.EcoBot,
+        //     sparkleCount = 11
+        // )
 
         Box(
             modifier = Modifier
