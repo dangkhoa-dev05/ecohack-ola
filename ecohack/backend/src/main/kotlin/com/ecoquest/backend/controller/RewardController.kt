@@ -2,26 +2,23 @@ package com.ecoquest.backend.controller
 
 import com.ecoquest.backend.common.ApiResponse
 import com.ecoquest.backend.dto.StatsDto
-import com.ecoquest.backend.service.MockUserStore
-import com.ecoquest.backend.service.RewardService
+import com.ecoquest.backend.service.ProfileService
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * JIRA-411 — exposes the mock reward state (credits + streak) via /me/stats.
- * The values are layered on top of the default MockUserStore profile so the
- * endpoint reflects rewards granted during the current process lifetime.
- */
 @RestController
 class RewardController(
-    private val rewardService: RewardService,
-    private val mockUserStore: MockUserStore
+    private val profileService: ProfileService
 ) {
 
     @GetMapping("/me/stats")
     fun getStats(): ApiResponse<StatsDto> {
         val base = mockUserStore.findById("user_001")
             ?: return ApiResponse.error("User not found")
+    fun getStats(authentication: Authentication): ApiResponse<StatsDto> {
+        val base = mockUserStore.findById(authentication.name)
+            ?: throw IllegalArgumentException("User ${authentication.name} not found")
         val grantedCredits = rewardService.getCredits(base.id)
         val grantedStreak = rewardService.getStreak(base.id)
 
@@ -33,5 +30,6 @@ class RewardController(
                 tasksCompleted = (grantedCredits / 50).coerceAtLeast(0)
             )
         )
+        return ApiResponse.success(profileService.getStats(authentication.name))
     }
 }

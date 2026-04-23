@@ -3,6 +3,7 @@ package com.ecoquest.backend.controller
 import com.ecoquest.backend.common.ApiResponse
 import com.ecoquest.backend.dto.submission.*
 import com.ecoquest.backend.service.SubmissionService
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -10,12 +11,14 @@ import org.springframework.web.bind.annotation.*
 class SubmissionController(
     private val submissionService: SubmissionService
 ) {
-    private val mockUserId = "user_001"
 
     @PostMapping("/init")
-    fun initSubmission(@RequestBody request: InitSubmissionRequest): ApiResponse<InitSubmissionResponse> {
+    fun initSubmission(
+        authentication: Authentication,
+        @RequestBody request: InitSubmissionRequest
+    ): ApiResponse<InitSubmissionResponse> {
         return try {
-            ApiResponse.success(submissionService.init(mockUserId, request))
+            ApiResponse.success(submissionService.init(authentication.name, request))
         } catch (e: Exception) {
             ApiResponse.error(e.message ?: "Failed to initialise submission")
         }
@@ -23,20 +26,24 @@ class SubmissionController(
 
     @PostMapping("/{id}/complete")
     fun completeSubmission(
+        authentication: Authentication,
         @PathVariable id: String,
         @RequestBody request: CompleteSubmissionRequest
     ): ApiResponse<SubmissionDto> {
         return try {
-            ApiResponse.success(submissionService.complete(id, request))
+            ApiResponse.success(submissionService.complete(authentication.name, id, request))
         } catch (e: Exception) {
             ApiResponse.error(e.message ?: "Failed to complete submission")
         }
     }
 
     @GetMapping("/{id}")
-    fun getSubmission(@PathVariable id: String): ApiResponse<SubmissionDto> {
+    fun getSubmission(
+        authentication: Authentication,
+        @PathVariable id: String
+    ): ApiResponse<SubmissionDto> {
         return try {
-            ApiResponse.success(submissionService.getById(id))
+            ApiResponse.success(submissionService.getById(authentication.name, id))
         } catch (e: Exception) {
             ApiResponse.error(e.message ?: "Submission not found")
         }
@@ -44,8 +51,8 @@ class SubmissionController(
 
     @GetMapping
     fun listSubmissions(
-        @RequestParam(defaultValue = "user_001") userId: String
+        authentication: Authentication
     ): ApiResponse<List<SubmissionSummaryDto>> {
-        return ApiResponse.success(submissionService.listByUser(userId))
+        return ApiResponse.success(submissionService.listByUser(authentication.name))
     }
 }

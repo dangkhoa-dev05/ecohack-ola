@@ -32,6 +32,7 @@ object RepositoryProvider {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize taskRepository, falling back to FakeTaskRepository", e)
+        if (BuildConfig.USE_FAKE_TASK_REPOSITORY) {
             FakeTaskRepository()
         }
     }

@@ -33,6 +33,7 @@ import com.ecoquest.app.ui.theme.EcoDimens
 import com.ecoquest.app.ui.theme.EcoForest
 import com.ecoquest.app.ui.theme.EcoGreen
 import com.ecoquest.app.ui.theme.EcoMint
+import com.ecoquest.app.ui.viewmodel.SubmissionRetryStage
 import com.ecoquest.app.ui.viewmodel.SubmitProofViewModel
 import java.io.File
 
@@ -228,6 +229,46 @@ fun SubmitProofScreen(
                             color = androidx.compose.ui.graphics.Color(0xFFC62828),
                             style = MaterialTheme.typography.bodyMedium
                         )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = when (uiState.retryStage) {
+                                SubmissionRetryStage.INIT -> "Could not start the submission."
+                                SubmissionRetryStage.COMPLETE -> "Upload finished, but final submission failed."
+                                null -> "Submission failed."
+                            },
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = uiState.error!!,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        if (uiState.canRetry) {
+                            OutlinedButton(
+                                onClick = { viewModel.retry(taskId) },
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = when (uiState.retryStage) {
+                                        SubmissionRetryStage.INIT -> "Retry Start"
+                                        SubmissionRetryStage.COMPLETE -> "Retry Submit"
+                                        null -> "Retry"
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -264,7 +305,13 @@ fun SubmitProofScreen(
             }
 
             Button(
-                onClick = { viewModel.submit(taskId) },
+                onClick = {
+                    if (uiState.canRetry) {
+                        viewModel.retry(taskId)
+                    } else {
+                        viewModel.submit(taskId)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(EcoDimens.LargeActionHeight),

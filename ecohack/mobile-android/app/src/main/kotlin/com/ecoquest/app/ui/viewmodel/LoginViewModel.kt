@@ -5,7 +5,12 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ecoquest.app.R
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ecoquest.app.data.api.AuthTokenStore
 import com.ecoquest.app.data.api.RetrofitClient
+import com.ecoquest.app.data.model.toUser
+import com.ecoquest.app.data.repository.UserSessionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +44,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     api.login(com.ecoquest.app.data.model.LoginRequest(email, password))
                 }
                 if (response.success && response.data != null) {
-                    TokenManager.token = response.data.token
+                    AuthTokenStore.setToken(response.data.token)
+                    UserSessionRepository.setCurrentUser(response.data.user.toUser())
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         loginSuccess = true
@@ -58,8 +64,4 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-}
-
-object TokenManager {
-    var token: String? = null
 }
