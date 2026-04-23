@@ -14,6 +14,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import android.os.Environment
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -45,6 +55,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
@@ -60,6 +78,8 @@ import com.ecoquest.app.ui.components.AnimatedNatureBackdrop
 import com.ecoquest.app.ui.components.NatureBackdropStyle
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
 import kotlin.math.roundToInt
+import androidx.core.content.ContextCompat
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +89,76 @@ fun TaskListScreen(
     viewModel: TaskViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    var pendingTask by remember { mutableStateOf<TaskDto?>(null) }
+    var cameraUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var taskFeedInitialized by remember { mutableStateOf(false) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val task = pendingTask
+        pendingTask = null
+        if (success && task != null && cameraUri != null) {
+            viewModel.submitTask(task, cameraUri.toString())
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        val task = pendingTask
+        pendingTask = null
+        if (uri != null && task != null) {
+            viewModel.submitTask(task, uri.toString())
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            cameraUri?.let { cameraLauncher.launch(it) }
+        } else {
+            pendingTask = null
+            cameraUri = null
+            viewModel.setError("Camera permission denied")
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        taskFeedInitialized = true
+        if (granted) {
+            val location = context.findBestLastKnownLocation()
+            viewModel.loadTaskFeed(location?.latitude, location?.longitude)
+        } else {
+            viewModel.loadTaskFeed()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!taskFeedInitialized) {
+            val hasLocationPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            taskFeedInitialized = true
+            if (hasLocationPermission) {
+                val location = context.findBestLastKnownLocation()
+                viewModel.loadTaskFeed(location?.latitude, location?.longitude)
+            } else {
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
     var previousScrollMarker by remember { mutableIntStateOf(0) }
@@ -136,6 +226,57 @@ fun TaskListScreen(
                                 tint = Color(0xFF1F3D27)
                             )
                         }
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            uiState.tasks.isEmpty() && uiState.error != null -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                    Text(
+                        text = uiState.error ?: "Unknown error",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        val location = context.findBestLastKnownLocation()
+                        viewModel.loadTaskFeed(location?.latitude, location?.longitude)
+                    }) {
+                        Text("Retry")
+                    }
+                }
+            }
+            else -> {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        Text(
+                            text = uiState.feedTitle,
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                    items(uiState.tasks) { task ->
+                        TaskCard(
+                            task = task,
+                            isSubmitting = uiState.submittingTaskId == task.id,
+                            submissionState = uiState.taskStates[task.id],
+                            onClick = { onTaskClick(task.id) },
+                            onSubmitWithPhoto = {
+                                viewModel.openCameraSheet(task)
+                            },
+                            onSubmitWithoutPhoto = {
+                                viewModel.submitTask(task, null)
+                            }
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -270,6 +411,28 @@ private fun TaskCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (task.distanceKm != null) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${task.distanceKm} km away",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = EcoGold,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "+${task.rewardCredits} credits",
                     color = accent,
@@ -362,4 +525,24 @@ private fun taskAccentColor(category: String): Color {
         "ENERGY" -> Color(0xFFE08A2E)
         else -> Color(0xFF5D842B)
     }
+@SuppressLint("MissingPermission")
+private fun Context.findBestLastKnownLocation(): Location? {
+    val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        ?: return null
+
+    val providers = buildList {
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            add(LocationManager.GPS_PROVIDER)
+        }
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            add(LocationManager.NETWORK_PROVIDER)
+        }
+        if (locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER)) {
+            add(LocationManager.PASSIVE_PROVIDER)
+        }
+    }
+
+    return providers
+        .mapNotNull { provider -> runCatching { locationManager.getLastKnownLocation(provider) }.getOrNull() }
+        .maxByOrNull { it.time }
 }

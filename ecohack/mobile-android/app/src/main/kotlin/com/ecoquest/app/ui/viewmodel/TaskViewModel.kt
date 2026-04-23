@@ -24,6 +24,7 @@ data class TaskUiState(
     val tasks: List<TaskDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
+    val feedTitle: String = "Daily Tasks",
     val submittingTaskId: String? = null,
     val submissionResult: SubmissionResult? = null
 )
@@ -36,12 +37,21 @@ class TaskViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
-    fun loadDailyTasks() {
+    fun loadTaskFeed(
+        latitude: Double? = null,
+        longitude: Double? = null
+    ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
+                val tasks = taskRepository.getTasks(latitude, longitude)
                 _uiState.value = _uiState.value.copy(
-                    tasks = taskRepository.getDailyTasks(),
+                    tasks = tasks,
+                    feedTitle = if (latitude != null && longitude != null) {
+                        "Nearby Tasks"
+                    } else {
+                        "Daily Tasks"
+                    },
                     isLoading = false
                 )
             } catch (e: Exception) {

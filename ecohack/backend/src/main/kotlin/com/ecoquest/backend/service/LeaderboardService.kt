@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service
  */
 @Service
 class LeaderboardService(
-    private val leaderboardRepo: LeaderboardRepo
+    private val leaderboardRepo: LeaderboardRepo,
+    private val mockUserStore: MockUserStore,
+    private val rewardService: RewardService
 ) {
 
     fun getAllLeaderboard(): List<Leaderboard> = aggregate()
@@ -27,7 +29,29 @@ class LeaderboardService(
     }
 
     private fun aggregate(): List<Leaderboard> {
-        return leaderboardRepo.findAll()
+        val staticRows = leaderboardRepo.findAll()
+        val liveUsers = mockUserStore.allUsers().map { user ->
+            val bonusCredits = rewardService.getCredits(user.id)
+            val liveStreak = rewardService.getStreak(user.id)
+            Leaderboard(
+                rank = 0,
+                displayName = user.displayName,
+                credits = user.credits + bonusCredits,
+                // Keep level tied to streak progression in mock mode.
+                level = if (liveStreak > 0) user.level + (liveStreak / 7) else user.level
+            )
+        }
+
+        // Prefer live user state over static JSON if names overlap.
+        val merged = LinkedHashMap<String, Leaderboard>()
+        staticRows.forEach { row ->
+            merged[row.displayName.lowercase()] = row.copy(rank = 0)
+        }
+        liveUsers.forEach { row ->
+            merged[row.displayName.lowercase()] = row
+        }
+
+        return merged.values
             .sortedWith(
                 compareByDescending<Leaderboard> { it.credits }
                     .thenByDescending { it.level }

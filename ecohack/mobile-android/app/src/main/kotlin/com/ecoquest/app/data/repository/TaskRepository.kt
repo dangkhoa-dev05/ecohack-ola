@@ -4,7 +4,10 @@ import com.ecoquest.app.data.model.SubmissionDto
 import com.ecoquest.app.data.model.TaskDto
 
 interface TaskRepository {
-    suspend fun getDailyTasks(): List<TaskDto>
+    suspend fun getTasks(
+        latitude: Double? = null,
+        longitude: Double? = null
+    ): List<TaskDto>
 
     suspend fun submitTask(task: TaskDto, imageUrl: String?): SubmissionDto
 }

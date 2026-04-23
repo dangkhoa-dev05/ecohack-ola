@@ -26,6 +26,8 @@ class MockUserStore {
                 streak = 5,
                 totalTasksCompleted = 12,
                 joinDate = "2026-03-01"
+                totalTasksCompleted = 18,
+                joinDate = "2025-01-15"
             )
         ),
         MockAuthUser(
@@ -41,6 +43,8 @@ class MockUserStore {
                 streak = 12,
                 totalTasksCompleted = 41,
                 joinDate = "2025-12-12"
+                totalTasksCompleted = 57,
+                joinDate = "2024-11-03"
             )
         )
     )
@@ -48,11 +52,12 @@ class MockUserStore {
     fun findByCredentials(email: String, password: String): MockAuthUser? {
         return users.firstOrNull {
             it.email.equals(email.trim(), ignoreCase = true) &&
-                    it.password == password
+                it.password == password
         }
     }
 
-    fun findById(userId: String): UserDto? {
-        return users.firstOrNull { it.user.id == userId }?.user
-    }
+    fun findById(userId: String): UserDto? =
+        users.firstOrNull { it.user.id == userId }?.user
+
+    fun allUsers(): List<UserDto> = users.map { it.user }
 }

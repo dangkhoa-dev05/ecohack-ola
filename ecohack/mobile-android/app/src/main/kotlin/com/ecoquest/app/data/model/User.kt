@@ -12,8 +12,8 @@ data class User(
 )
 
 fun UserDto.toUser(
-    email: String? = null,
-    avatarUrl: String? = null
+    email: String? = this.email,
+    avatarUrl: String? = this.avatarUrl
 ): User {
     return User(
         id = id,

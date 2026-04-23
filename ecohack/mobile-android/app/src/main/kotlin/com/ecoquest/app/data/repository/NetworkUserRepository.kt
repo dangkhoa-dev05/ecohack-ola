@@ -47,9 +47,7 @@ class NetworkUserRepository : UserRepository {
 
         authToken = response.data.token
         AuthTokenStore.setToken(authToken)
-        val user = response.data.user.toUser(
-            email = email.trim()
-        )
+        val user = response.data.user.toUser()
         UserSessionRepository.setCurrentUser(user)
         return user
     }
