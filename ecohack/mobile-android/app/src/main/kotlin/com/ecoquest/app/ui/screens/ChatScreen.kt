@@ -1,47 +1,51 @@
 package com.ecoquest.app.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ecoquest.app.R
-import com.ecoquest.app.ui.components.*
-import com.ecoquest.app.ui.theme.EcoDimens
-import com.ecoquest.app.ui.theme.EcoForest
-import com.ecoquest.app.ui.theme.EcoGreen
-import com.ecoquest.app.ui.theme.EcoMint
+import com.ecoquest.app.ui.components.AnimatedNatureBackdrop
+import com.ecoquest.app.ui.components.NatureBackdropStyle
 import com.ecoquest.app.ui.viewmodel.ChatMessage
 import com.ecoquest.app.ui.viewmodel.ChatViewModel
 
@@ -51,87 +55,61 @@ fun ChatScreen(
     viewModel: ChatViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    var inputText by remember { mutableStateOf("") }
 
-    // Auto-scroll to bottom when new message arrives
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
             listState.animateScrollToItem(uiState.messages.size - 1)
         }
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "chat")
-    val botAvatarFloat by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "bot_float"
-    )
-
     Scaffold(
+        containerColor = Color(0xFFEAF4EA),
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "🤖",
-                                fontSize = 22.sp,
-                                modifier = Modifier
-                                    .padding(end = 6.dp)
-                                    .offset(y = botAvatarFloat.dp)
-                            )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🤖", fontSize = 22.sp)
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Column {
                             Text(
                                 text = stringResource(R.string.chat_title),
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
+                                color = Color(0xFF1F3D27),
+                                fontWeight = FontWeight.ExtraBold
                             )
-                            Spacer(Modifier.width(6.dp))
-                            Text("✨", fontSize = 14.sp)
+                            Text(
+                                text = stringResource(R.string.chat_subtitle),
+                                color = Color(0xFF4A6A53),
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
-                        Text(
-                            text = stringResource(R.string.chat_subtitle),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
-                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFEAF4EA))
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
-                shadowElevation = 8.dp
-            ) {
+            Surface(color = Color.White, shadowElevation = 8.dp) {
                 Row(
                     modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
-                        placeholder = { Text(stringResource(R.string.chat_placeholder)) },
-                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier.weight(1f),
-                        singleLine = false,
-                        maxLines = 3,
+                        placeholder = { Text(stringResource(R.string.chat_placeholder)) },
+                        shape = RoundedCornerShape(18.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = EcoGreen,
-                            unfocusedBorderColor = Color(0xFFDDD)
+                            focusedBorderColor = Color(0xFF6E9343),
+                            unfocusedBorderColor = Color(0xFFC8D8BE)
                         )
                     )
-                    FilledIconButton(
+                    Button(
                         onClick = {
                             if (inputText.isNotBlank()) {
                                 viewModel.sendMessage(inputText.trim())
@@ -139,11 +117,10 @@ fun ChatScreen(
                             }
                         },
                         enabled = inputText.isNotBlank() && !uiState.isLoading,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = EcoGreen
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D842B)),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("📤", fontSize = 18.sp)
+                        Text("Send")
                     }
                 }
             }
@@ -153,81 +130,34 @@ fun ChatScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF5F0E8))
+                .background(Color(0xFFEAF4EA))
         ) {
-            // Sparkles background
-            FloatingSparkles(
-                modifier = Modifier.fillMaxSize(),
-                color = Color(0xFFFFD54F),
-                count = 4
-            )
-            // Corner leaf decorations
-            AnimatedLeafDecor(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 8.dp),
-                size = 70.dp,
-                alpha = 0.15f,
-                delayMs = 0
-            )
-            AnimatedFlowerDecor(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(bottom = 80.dp, start = 8.dp),
-                size = 44.dp,
-                alpha = 0.22f,
-                delayMs = 400
-            )
-            AnimatedStarDecor(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = 12.dp, start = 12.dp),
-                size = 20.dp,
-                alpha = 0.40f,
-                delayMs = 200
-            )
+            AnimatedNatureBackdrop(style = NatureBackdropStyle.EcoBot)
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
                 state = listState,
-                contentPadding = PaddingValues(
-                    horizontal = 12.dp,
-                    vertical = EcoDimens.ScreenVertical
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(uiState.messages) { message ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(tween(200)) + slideInVertically(
-                            initialOffsetY = { 40 },
-                            animationSpec = spring(dampingRatio = 0.78f, stiffness = 150f)
-                        ),
-                        modifier = Modifier.animateItem()
-                    ) {
-                        ChatBubble(message = message, botAvatarFloat = if (!message.isUser) botAvatarFloat else 0f)
-                    }
+                item {
+                    EcoBotHeroCard(messageCount = uiState.messages.size)
                 }
 
-                if (uiState.messages.isEmpty() || uiState.messages.last().isUser) {
+                items(uiState.messages) { msg ->
+                    ChatBubble(msg)
+                }
+
+                if (uiState.isLoading) {
                     item {
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn(tween(300)) + slideInVertically(
-                                initialOffsetY = { 40 },
-                                animationSpec = spring(dampingRatio = 0.78f, stiffness = 150f)
-                            )
-                        ) {
-                            if (uiState.isLoading) {
-                                TypingIndicator()
-                            } else if (uiState.messages.isEmpty()) {
-                                SuggestionChips(
-                                    onSuggestionClick = { suggestion ->
-                                        viewModel.sendMessage(suggestion)
-                                    }
-                                )
-                            }
-                        }
+                        Text(
+                            text = "EcoBot is typing...",
+                            color = Color(0xFF5D842B),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
                     }
                 }
             }
@@ -236,149 +166,101 @@ fun ChatScreen(
 }
 
 @Composable
-fun ChatBubble(message: ChatMessage, botAvatarFloat: Float = 0f) {
-    val isUser = message.isUser
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+private fun EcoBotHeroCard(messageCount: Int) {
+    Surface(
+        shape = RoundedCornerShape(28.dp),
+        color = Color.Transparent,
+        shadowElevation = 4.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        if (!isUser) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .offset(y = botAvatarFloat.dp)
-                    .clip(CircleShape)
-                    .background(EcoGreen),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🤖", fontSize = 18.sp)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        Surface(
-            shape = RoundedCornerShape(
-                topStart = 18.dp,
-                topEnd = 18.dp,
-                bottomStart = if (isUser) 18.dp else 6.dp,
-                bottomEnd = if (isUser) 6.dp else 18.dp
-            ),
-            color = if (isUser) EcoGreen else Color(0xFFE8F5E9),
-            shadowElevation = 2.dp,
+        Column(
             modifier = Modifier
-                .widthIn(max = 280.dp)
-                .scale(0.99f + (botAvatarFloat / 300))
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0xFFDFF8EA), Color(0xFFC7EFD9), Color(0xFFB3E4D5))
+                    )
+                )
+                .fillMaxWidth()
+                .padding(20.dp)
         ) {
             Text(
-                text = message.text,
-                modifier = Modifier.padding(14.dp),
-                color = if (isUser) Color.White else Color(0xFF2D4739),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isUser) FontWeight.SemiBold else FontWeight.Normal
+                text = "Eco assistant online",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2D6A54)
             )
-        }
-
-        if (isUser) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("👤", fontSize = 18.sp)
-        }
-    }
-}
-
-@Composable
-fun TypingIndicator() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(EcoGreen),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("🤖", fontSize = 18.sp)
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFE8F5E9)
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(3) { dot ->
-                    val infiniteTransition = rememberInfiniteTransition(label = "dot_$dot")
-                    val dotScale by infiniteTransition.animateFloat(
-                        initialValue = 0.6f,
-                        targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(600 + (dot * 100), easing = FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "dot_scale_$dot"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .scale(dotScale)
-                            .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
-                    )
-                }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Ask for greener habits, recycling tips, or quick ways to earn more credits today.",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF1F3D27)
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ChatHintChip(text = "$messageCount messages")
+                ChatHintChip(text = "Instant tips")
+                ChatHintChip(text = "Eco Q&A")
             }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SuggestionChips(onSuggestionClick: (String) -> Unit) {
-    val suggestions = stringArrayResource(R.array.chat_suggestions)
-    Column(
+private fun ChatHintChip(text: String) {
+    Text(
+        text = text,
+        color = Color(0xFF1F3D27),
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .background(Color.White.copy(alpha = 0.75f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 12.dp, vertical = 7.dp)
+    )
+}
+
+@Composable
+private fun ChatBubble(message: ChatMessage) {
+    val isUser = message.isUser
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        Text(
-            text = "💡 Try Asking:",
-            style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF2D4739),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
-        )
-        FlowRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            suggestions.forEach { suggestion ->
-                SuggestionChip(
-                    onClick = { onSuggestionClick(suggestion) },
-                    label = {
-                        Text(
-                            text = suggestion,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = EcoGreen,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    },
+            if (!isUser) {
+                Surface(
                     shape = RoundedCornerShape(16.dp),
-                    border = null,
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = Color(0xFFF1F8E9)
-                    )
+                    color = Color(0xFFD6F2E2),
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "AI",
+                            color = Color(0xFF2D6A54),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(
+                    topStart = 18.dp,
+                    topEnd = 18.dp,
+                    bottomStart = if (isUser) 18.dp else 6.dp,
+                    bottomEnd = if (isUser) 6.dp else 18.dp
+                ),
+                color = if (isUser) Color(0xFF5D842B) else Color.White,
+                shadowElevation = 2.dp
+            ) {
+                Text(
+                    text = message.text,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    color = if (isUser) Color.White else Color(0xFF234028)
                 )
             }
         }

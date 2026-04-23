@@ -34,7 +34,7 @@ class LeaderboardViewModel(application: Application) : AndroidViewModel(applicat
                 val response = RetrofitClient.withFallback { api -> api.getLeaderboard() }
                 if (response.success && response.data != null) {
                     _uiState.value = _uiState.value.copy(
-                        entries = response.data,
+                        entries = response.data.sortedBy { it.rank },
                         isLoading = false
                     )
                 } else {

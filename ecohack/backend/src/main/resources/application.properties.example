@@ -1,0 +1,22 @@
+spring.application.name=backend
+
+# ---- Azure AI Vision (JIRA-421) ----
+# Leave endpoint / key blank to use the mock fallback.
+azure.vision.endpoint=${AZURE_VISION_ENDPOINT:}
+azure.vision.key=${AZURE_VISION_KEY:}
+azure.vision.api-version=2023-02-01-preview
+azure.vision.features=tags,description,objects
+
+# ---- Azure OpenAI assistant (JIRA-423) ----
+# Leave endpoint / key blank to use the canned rule-based reply.
+azure.openai.endpoint=${AZURE_OPENAI_ENDPOINT:}
+azure.openai.key=${AZURE_OPENAI_KEY:}
+azure.openai.deployment=${AZURE_OPENAI_DEPLOYMENT:gpt-4o-mini}
+azure.openai.api-version=${AZURE_OPENAI_API_VERSION:2024-02-15-preview}
+azure.openai.system-prompt=You are EcoBot, a friendly assistant helping users complete eco-friendly tasks such as recycling, planting trees, reducing plastic and cleaning up. Keep replies concise (<=120 words) and actionable.
+azure.openai.max-tokens=300
+azure.openai.temperature=0.7
+
+# ---- Submission verification (JIRA-422) ----
+# Max age (minutes) allowed between the photo timestamp and server time.
+verification.timestamp.max-age-minutes=1440

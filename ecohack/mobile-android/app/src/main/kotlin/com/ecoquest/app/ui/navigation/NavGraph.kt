@@ -1,120 +1,147 @@
 package com.ecoquest.app.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.SpringSpec
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ecoquest.app.ui.screens.ChatScreen
+import com.ecoquest.app.ui.screens.HomeScreen
+import com.ecoquest.app.ui.screens.LeaderboardScreen
 import com.ecoquest.app.ui.screens.LoginScreen
-import com.ecoquest.app.ui.screens.MainScreen
-import com.ecoquest.app.ui.screens.SubmitProofScreen
-import com.ecoquest.app.ui.screens.TaskDetailScreen
+import com.ecoquest.app.ui.screens.ProfileScreen
+import com.ecoquest.app.ui.screens.SubmissionHistoryScreen
+import com.ecoquest.app.ui.screens.TaskListScreen
+import com.ecoquest.app.ui.viewmodel.AuthViewModel
 
 object Routes {
     const val LOGIN = "login"
-    const val MAIN = "main"
-    const val TASK_DETAIL = "tasks/{taskId}"
-    const val SUBMIT_PROOF = "submit/{taskId}/{taskTitle}"
-
-    fun taskDetail(taskId: String) = "tasks/$taskId"
-    fun submitProof(taskId: String, taskTitle: String) =
-        "submit/$taskId/${java.net.URLEncoder.encode(taskTitle, "UTF-8")}"
+    const val HOME = "home"
+    const val TASKS = "tasks"
+    const val LEADERBOARD = "leaderboard"
+    const val HISTORY = "history"
+    const val CHAT = "chat"
+    const val PROFILE = "profile"
 }
+
+data class BottomNavItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector
+)
+
+private val bottomNavItems = listOf(
+    BottomNavItem(Routes.HOME, "Home", Icons.Default.Home),
+    BottomNavItem(Routes.TASKS, "Tasks", Icons.Default.TaskAlt),
+    BottomNavItem(Routes.LEADERBOARD, "Rank", Icons.Default.EmojiEvents),
+    BottomNavItem(Routes.HISTORY, "History", Icons.Default.History),
+    BottomNavItem(Routes.CHAT, "EcoBot", Icons.Default.Chat),
+    BottomNavItem(Routes.PROFILE, "Profile", Icons.Default.Person)
+)
 
 @Composable
 fun EcoQuestNavGraph() {
     val navController = rememberNavController()
-    val slideSpringSpec = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 160f)
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = currentRoute != Routes.LOGIN
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.LOGIN,
-        enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> fullWidth / 3 },
-                animationSpec = slideSpringSpec
-            ) + fadeIn(animationSpec = tween(500)) + scaleIn(
-                initialScale = 0.92f,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 160f)
-            )
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { fullWidth -> -fullWidth / 3 },
-                animationSpec = spring(dampingRatio = 0.9f, stiffness = 200f)
-            ) + fadeOut(animationSpec = tween(300)) + scaleOut(
-                targetScale = 0.97f,
-                animationSpec = spring(dampingRatio = 0.9f, stiffness = 200f)
-            )
-        },
-        popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> -fullWidth / 3 },
-                animationSpec = slideSpringSpec
-            ) + fadeIn(animationSpec = tween(500)) + scaleIn(
-                initialScale = 0.92f,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 160f)
-            )
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { fullWidth -> fullWidth / 3 },
-                animationSpec = spring(dampingRatio = 0.9f, stiffness = 200f)
-            ) + fadeOut(animationSpec = tween(300)) + scaleOut(
-                targetScale = 0.97f,
-                animationSpec = spring(dampingRatio = 0.9f, stiffness = 200f)
-            )
-        }
-    ) {
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+    Scaffold(
+        containerColor = Color(0xFFEAF4EA),
+        bottomBar = {
+            if (showBottomBar) {
+                NavigationBar(
+                    containerColor = Color(0xFFB8CD7F),
+                    contentColor = Color(0xFF1F3C27)
+                ) {
+                    bottomNavItems.forEach { item ->
+                        NavigationBarItem(
+                            selected = currentRoute == item.route,
+                            onClick = {
+                                if (currentRoute != item.route) {
+                                    navController.navigate(item.route) {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            icon = { Icon(item.icon, contentDescription = item.label) },
+                            label = { Text(item.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color(0xFF1D3B24),
+                                selectedTextColor = Color(0xFF1D3B24),
+                                indicatorColor = Color.White.copy(alpha = 0.7f),
+                                unselectedIconColor = Color(0xFF385947),
+                                unselectedTextColor = Color(0xFF385947)
+                            )
+                        )
                     }
                 }
-            )
+            }
         }
-        composable(Routes.MAIN) {
-            MainScreen(
-                onNavigateToTaskDetail = { taskId ->
-                    navController.navigate(Routes.taskDetail(taskId))
-                },
-                onNavigateToSubmitProof = { taskId, title ->
-                    navController.navigate(Routes.submitProof(taskId, title))
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = Routes.LOGIN,
+            modifier = Modifier.padding(padding)
+        ) {
+            composable(Routes.LOGIN) {
+                val authViewModel: AuthViewModel = viewModel()
+                val authUiState by authViewModel.uiState.collectAsState()
+
+                LaunchedEffect(authUiState.isLoggedIn) {
+                    if (authUiState.isLoggedIn) {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    }
                 }
-            )
-        }
-        composable(Routes.TASK_DETAIL) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
-            TaskDetailScreen(
-                taskId = taskId,
-                onBack = { navController.popBackStack() },
-                onSubmitProof = { id, title ->
-                    navController.navigate(Routes.submitProof(id, title))
-                }
-            )
-        }
-        composable(Routes.SUBMIT_PROOF) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
-            val taskTitle = backStackEntry.arguments?.getString("taskTitle")?.let {
-                java.net.URLDecoder.decode(it, "UTF-8")
-            } ?: "Task"
-            SubmitProofScreen(
-                taskId = taskId,
-                taskTitle = taskTitle,
-                onBack = { navController.popBackStack() }
-            )
+
+                LoginScreen(
+                    isLoading = authUiState.isLoading,
+                    errorMessage = authUiState.error,
+                    onLoginClick = authViewModel::login
+                )
+            }
+            composable(Routes.HOME) {
+                HomeScreen(
+                    onNavigateToTasks = {
+                        navController.navigate(Routes.TASKS) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(Routes.TASKS) { TaskListScreen() }
+            composable(Routes.LEADERBOARD) { LeaderboardScreen() }
+            composable(Routes.HISTORY) { SubmissionHistoryScreen() }
+            composable(Routes.CHAT) { ChatScreen() }
+            composable(Routes.PROFILE) { ProfileScreen() }
         }
     }
 }

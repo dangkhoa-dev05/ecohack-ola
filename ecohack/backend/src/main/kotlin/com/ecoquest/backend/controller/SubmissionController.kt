@@ -1,28 +1,24 @@
 package com.ecoquest.backend.controller
 
 import com.ecoquest.backend.common.ApiResponse
-import com.ecoquest.backend.dto.CompleteSubmissionRequest
-import com.ecoquest.backend.dto.InitSubmissionRequest
-import com.ecoquest.backend.dto.InitSubmissionResponse
-import com.ecoquest.backend.dto.SubmissionDto
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import com.ecoquest.backend.dto.submission.*
+import com.ecoquest.backend.service.SubmissionService
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/submissions")
-class SubmissionController {
+class SubmissionController(
+    private val submissionService: SubmissionService
+) {
+    private val mockUserId = "user_001"
 
     @PostMapping("/init")
     fun initSubmission(@RequestBody request: InitSubmissionRequest): ApiResponse<InitSubmissionResponse> {
-        return ApiResponse.success(
-            InitSubmissionResponse(
-                submissionId = "sub_${System.currentTimeMillis()}",
-                uploadUrl = "https://ecoquestblob.blob.core.windows.net/task-images/mock-upload-url"
-            )
-        )
+        return try {
+            ApiResponse.success(submissionService.init(mockUserId, request))
+        } catch (e: Exception) {
+            ApiResponse.error(e.message ?: "Failed to initialise submission")
+        }
     }
 
     @PostMapping("/{id}/complete")
@@ -30,13 +26,26 @@ class SubmissionController {
         @PathVariable id: String,
         @RequestBody request: CompleteSubmissionRequest
     ): ApiResponse<SubmissionDto> {
-        return ApiResponse.success(
-            SubmissionDto(
-                id = id,
-                taskId = "task_001",
-                status = "PENDING_REVIEW",
-                rewardCredits = 50
-            )
-        )
+        return try {
+            ApiResponse.success(submissionService.complete(id, request))
+        } catch (e: Exception) {
+            ApiResponse.error(e.message ?: "Failed to complete submission")
+        }
+    }
+
+    @GetMapping("/{id}")
+    fun getSubmission(@PathVariable id: String): ApiResponse<SubmissionDto> {
+        return try {
+            ApiResponse.success(submissionService.getById(id))
+        } catch (e: Exception) {
+            ApiResponse.error(e.message ?: "Submission not found")
+        }
+    }
+
+    @GetMapping
+    fun listSubmissions(
+        @RequestParam(defaultValue = "user_001") userId: String
+    ): ApiResponse<List<SubmissionSummaryDto>> {
+        return ApiResponse.success(submissionService.listByUser(userId))
     }
 }

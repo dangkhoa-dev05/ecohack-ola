@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 
 data class ChatMessage(
     val text: String,
-    val isUser: Boolean
+    val isUser: Boolean,
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 data class ChatUiState(
@@ -27,7 +28,6 @@ class ChatViewModel : ViewModel() {
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
     fun sendMessage(text: String) {
-        // Add user message
         val updatedMessages = _uiState.value.messages + ChatMessage(text, isUser = true)
         _uiState.value = _uiState.value.copy(messages = updatedMessages, isLoading = true)
 

@@ -11,12 +11,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/assistant")
-class AssistantController(
-    private val chatService: ChatService
-) {
+class AssistantController(private val chatService: ChatService) {
 
     @PostMapping("/chat")
     fun chat(@RequestBody request: ChatRequest): ApiResponse<ChatResponse> {
-        return ApiResponse.success(chatService.reply(request.message))
+        val reply = chatService.getReply(request.message)
+        return ApiResponse.success(ChatResponse(reply = reply))
     }
 }

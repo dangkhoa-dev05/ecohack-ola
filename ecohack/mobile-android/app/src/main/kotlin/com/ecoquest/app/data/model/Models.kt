@@ -47,18 +47,30 @@ data class InitSubmissionRequest(
 
 data class InitSubmissionResponse(
     val submissionId: String,
-    val uploadUrl: String
+    val uploadUrl: String,
+    val uploadUrlExpiresAt: String
 )
 
 data class CompleteSubmissionRequest(
-    val imageUrl: String
+    val imageUrl: String?
 )
 
 data class SubmissionDto(
     val id: String,
     val taskId: String,
     val status: String,
-    val rewardCredits: Int
+    val rewardCredits: Int,
+    val rejectionReason: String? = null,
+    val createdAt: String = "",
+    val updatedAt: String = ""
+)
+
+data class SubmissionSummaryDto(
+    val id: String,
+    val taskId: String,
+    val status: String,
+    val rewardCredits: Int,
+    val createdAt: String
 )
 
 data class StatsDto(
