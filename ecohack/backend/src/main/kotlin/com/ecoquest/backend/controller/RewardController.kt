@@ -4,6 +4,7 @@ import com.ecoquest.backend.common.ApiResponse
 import com.ecoquest.backend.dto.StatsDto
 import com.ecoquest.backend.service.MockUserStore
 import com.ecoquest.backend.service.RewardService
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -19,8 +20,9 @@ class RewardController(
 ) {
 
     @GetMapping("/me/stats")
-    fun getStats(): ApiResponse<StatsDto> {
-        val base = mockUserStore.getCurrentUser()
+    fun getStats(authentication: Authentication): ApiResponse<StatsDto> {
+        val base = mockUserStore.findById(authentication.name)
+            ?: throw IllegalArgumentException("User ${authentication.name} not found")
         val grantedCredits = rewardService.getCredits(base.id)
         val grantedStreak = rewardService.getStreak(base.id)
 

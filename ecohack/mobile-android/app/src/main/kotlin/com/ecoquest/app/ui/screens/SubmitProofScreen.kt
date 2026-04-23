@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ecoquest.app.ui.theme.EcoGold
 import com.ecoquest.app.ui.theme.EcoGreen
+import com.ecoquest.app.ui.viewmodel.SubmissionRetryStage
 import com.ecoquest.app.ui.viewmodel.SubmitProofViewModel
 import java.io.File
 
@@ -217,11 +218,47 @@ fun SubmitProofScreen(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
                 ) {
-                    Text(
-                        text = uiState.error!!,
+                    Column(
                         modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = when (uiState.retryStage) {
+                                SubmissionRetryStage.INIT -> "Could not start the submission."
+                                SubmissionRetryStage.COMPLETE -> "Upload finished, but final submission failed."
+                                null -> "Submission failed."
+                            },
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = uiState.error!!,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        if (uiState.canRetry) {
+                            OutlinedButton(
+                                onClick = { viewModel.retry(taskId) },
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = when (uiState.retryStage) {
+                                        SubmissionRetryStage.INIT -> "Retry Start"
+                                        SubmissionRetryStage.COMPLETE -> "Retry Submit"
+                                        null -> "Retry"
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -264,7 +301,13 @@ fun SubmitProofScreen(
 
             // Submit button
             Button(
-                onClick = { viewModel.submit(taskId) },
+                onClick = {
+                    if (uiState.canRetry) {
+                        viewModel.retry(taskId)
+                    } else {
+                        viewModel.submit(taskId)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -286,7 +329,11 @@ fun SubmitProofScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (uiState.submitted) "Submitted!" else "Submit Proof",
+                        text = when {
+                            uiState.submitted -> "Submitted!"
+                            uiState.canRetry -> "Retry Submission"
+                            else -> "Submit Proof"
+                        },
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )

@@ -1,5 +1,10 @@
 spring.application.name=backend
 
+# ---- JWT auth ----
+# Replace this with a strong base64-encoded secret in real environments.
+jwt.secret=${JWT_SECRET:ZWNvcXVlc3QtZGV2LXNlY3JldC1rZXktZm9yLWxvY2FsLXRlc3Rpbmctb25seQ==}
+jwt.expiration-ms=${JWT_EXPIRATION_MS:86400000}
+
 # ---- Azure AI Vision (JIRA-421) ----
 # Leave endpoint / key blank to use the mock fallback.
 azure.vision.endpoint=${AZURE_VISION_ENDPOINT:}

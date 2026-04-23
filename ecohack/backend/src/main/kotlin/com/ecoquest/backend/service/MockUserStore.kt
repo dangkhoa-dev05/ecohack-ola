@@ -19,9 +19,13 @@ class MockUserStore {
             user = UserDto(
                 id = "user_001",
                 displayName = "EcoWarrior",
+                email = "demo@ecoquest.app",
+                avatarUrl = null,
                 level = 3,
                 credits = 250,
-                streak = 5
+                streak = 5,
+                totalTasksCompleted = 18,
+                joinDate = "2025-01-15"
             )
         ),
         MockAuthUser(
@@ -30,9 +34,13 @@ class MockUserStore {
             user = UserDto(
                 id = "user_002",
                 displayName = "EcoAdmin",
+                email = "admin@ecoquest.app",
+                avatarUrl = null,
                 level = 8,
                 credits = 920,
-                streak = 12
+                streak = 12,
+                totalTasksCompleted = 57,
+                joinDate = "2024-11-03"
             )
         )
     )

@@ -12,7 +12,7 @@ object RepositoryProvider {
     }
 
     val taskRepository: TaskRepository by lazy {
-        if (BuildConfig.USE_FAKE_USER_REPOSITORY) {
+        if (BuildConfig.USE_FAKE_TASK_REPOSITORY) {
             FakeTaskRepository()
         } else {
             NetworkTaskRepository()

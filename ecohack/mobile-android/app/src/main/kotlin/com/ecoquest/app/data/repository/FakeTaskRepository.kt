@@ -45,7 +45,10 @@ class FakeTaskRepository : TaskRepository {
         )
     }
 
-    override suspend fun getDailyTasks(): List<TaskDto> = tasks
+    override suspend fun getTasks(
+        latitude: Double?,
+        longitude: Double?
+    ): List<TaskDto> = tasks
 
     override suspend fun submitTask(task: TaskDto, imageUrl: String?): SubmissionDto {
         return when {
@@ -66,5 +69,4 @@ class FakeTaskRepository : TaskRepository {
         }
     }
 }
-
 
