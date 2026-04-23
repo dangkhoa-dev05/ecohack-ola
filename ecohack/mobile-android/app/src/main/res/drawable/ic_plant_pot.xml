@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="140dp"
+    android:viewportWidth="120"
+    android:viewportHeight="140">
+    <!-- Pot body -->
+    <path
+        android:fillColor="#EF8C5A"
+        android:pathData="M36,90 L84,90 L78,120 L42,120 Z" />
+    <!-- Pot rim -->
+    <path
+        android:fillColor="#D45F2C"
+        android:pathData="M30,84 Q60,80 90,84 L90,92 Q60,88 30,92 Z" />
+    <!-- Soil -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M36,88 Q60,84 84,88 L84,92 Q60,88 36,92 Z" />
+    <!-- Stem -->
+    <path
+        android:strokeColor="#388E3C"
+        android:strokeWidth="4"
+        android:pathData="M60,84 L60,52"
+        android:fillColor="#00000000" />
+    <!-- Left big leaf -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M60,60 C44,50 28,35 32,18 C42,28 52,45 60,60 Z" />
+    <!-- Right big leaf -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M60,60 C76,50 92,35 88,18 C78,28 68,45 60,60 Z" />
+    <!-- Left vein -->
+    <path
+        android:strokeColor="#388E3C"
+        android:strokeWidth="1.5"
+        android:pathData="M60,60 C50,48 40,32 32,18"
+        android:fillColor="#00000000" />
+    <!-- Right vein -->
+    <path
+        android:strokeColor="#388E3C"
+        android:strokeWidth="1.5"
+        android:pathData="M60,60 C70,48 80,32 88,18"
+        android:fillColor="#00000000" />
+    <!-- Center top leaf -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M60,52 C52,36 52,20 60,8 C68,20 68,36 60,52 Z" />
+    <!-- Center vein -->
+    <path
+        android:strokeColor="#43A047"
+        android:strokeWidth="1.5"
+        android:pathData="M60,52 L60,8"
+        android:fillColor="#00000000" />
+    <!-- Small left leaf -->
+    <path
+        android:fillColor="#81C784"
+        android:pathData="M60,40 C50,34 38,28 38,16 C46,22 54,32 60,40 Z" />
+    <!-- Small right leaf -->
+    <path
+        android:fillColor="#81C784"
+        android:pathData="M60,40 C70,34 82,28 82,16 C74,22 66,32 60,40 Z" />
+    <!-- Pot highlight -->
+    <path
+        android:fillColor="#FF9B6A"
+        android:pathData="M42,92 Q44,88 46,90 L45,114 Q43,116 42,112 Z" />
+</vector>

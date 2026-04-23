@@ -26,15 +26,13 @@ data class TaskUiState(
     val error: String? = null,
     val feedTitle: String = "Daily Tasks",
     val submittingTaskId: String? = null,
-    val cameraSheetTask: TaskDto? = null,
-    val submissionResult: SubmissionResult? = null,
-    val taskStates: Map<String, String> = emptyMap()
+    val submissionResult: SubmissionResult? = null
 )
 
-class TaskViewModel(
-    private val taskRepository: TaskRepository = RepositoryProvider.taskRepository,
+class TaskViewModel : ViewModel() {
+
+    private val taskRepository: TaskRepository = RepositoryProvider.taskRepository
     private val userRepository: UserRepository = RepositoryProvider.userRepository
-) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
@@ -58,53 +56,49 @@ class TaskViewModel(
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
-                    isLoading = false
+                    isLoading = false,
+                    error = e.message ?: "Failed to load tasks"
                 )
             }
         }
     }
 
-    fun submitTask(task: TaskDto, imageUrl: String?) {
+    fun submitTask(task: TaskDto, imageUrl: String? = null) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 submittingTaskId = task.id,
+                error = null,
                 submissionResult = null
             )
+
             try {
                 val result = taskRepository.submitTask(task, imageUrl)
-                if (result.status == "APPROVED") {
+                val approved = result.status == "APPROVED"
+                val formattedReason = formatReason(result.rejectionReason)
+
+                if (approved) {
                     TaskHistoryRepository.recordCompletedTask(task, result.rewardCredits)
                     userRepository.getCurrentUser()?.let { user ->
                         userRepository.updateCurrentUser(user.applyTaskReward(result.rewardCredits))
                     }
                 }
-                val newTaskStates = _uiState.value.taskStates + (task.id to result.status)
+
                 _uiState.value = _uiState.value.copy(
+                    submittingTaskId = null,
                     submissionResult = SubmissionResult(
-                        isApproved = result.status == "APPROVED",
+                        isApproved = approved,
                         credits = result.rewardCredits,
-                        reason = formatReason(result.rejectionReason),
+                        reason = formattedReason,
                         task = task
-                    ),
-                    taskStates = newTaskStates,
-                    submittingTaskId = null
+                    )
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
-                    submittingTaskId = null
+                    submittingTaskId = null,
+                    error = e.message ?: "Submission failed"
                 )
             }
         }
-    }
-
-    fun openCameraSheet(task: TaskDto) {
-        _uiState.value = _uiState.value.copy(cameraSheetTask = task)
-    }
-
-    fun closeCameraSheet() {
-        _uiState.value = _uiState.value.copy(cameraSheetTask = null)
     }
 
     fun dismissResult() {
@@ -119,9 +113,12 @@ class TaskViewModel(
         _uiState.value = _uiState.value.copy(error = null)
     }
 
-    private fun formatReason(reason: String?): String = when (reason) {
+    private fun formatReason(reason: String?): String? = when (reason) {
         "MISSING_IMAGE" -> "Image is required"
         "MISSING_LOCATION" -> "Location is required"
-        else -> reason ?: "Unknown reason"
+        "INVALID_LOCATION" -> "Location is invalid"
+        "STALE_TIMESTAMP" -> "Photo is too old"
+        "VISION_MISMATCH" -> "Photo does not match the task"
+        else -> reason
     }
 }

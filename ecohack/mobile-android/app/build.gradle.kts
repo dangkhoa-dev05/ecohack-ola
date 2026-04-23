@@ -5,9 +5,46 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// OneDrive can mark outputs as reparse points and block Gradle cleanup.
+// Keep module build outputs in LOCALAPPDATA to avoid AccessDenied on package tasks.
+val localBuildRoot = System.getenv("LOCALAPPDATA") ?: "C:/temp"
+layout.buildDirectory.set(file("$localBuildRoot/ecohack-mobile-app-build"))
+
+val legacyDebugApkDir = file("$projectDir/build/outputs/apk/debug")
+val legacyRedirectDir = file(
+    "$projectDir/build/intermediates/apk_ide_redirect_file/debug/createDebugApkListingFileRedirect"
+)
+val relocatedDebugApkDir = layout.buildDirectory.dir("outputs/apk/debug")
+
+val writeLegacyRedirect by tasks.registering {
+    mustRunAfter("packageDebug")
+    doLast {
+        copy {
+            from(relocatedDebugApkDir)
+            into(legacyDebugApkDir)
+            include("*.apk", "output-metadata.json")
+        }
+        legacyRedirectDir.mkdirs()
+        file("$legacyRedirectDir/redirect.txt").writeText(
+            "#- File Locator -\nlistingFile=../../../../outputs/apk/debug/output-metadata.json\n"
+        )
+    }
+}
+
+tasks.matching { it.name == "packageDebug" }.configureEach {
+    finalizedBy(writeLegacyRedirect)
+}
+
 android {
     namespace = "com.ecoquest.app"
     compileSdk = 36
+
+    val configuredBaseUrl = (project.findProperty("BASE_URL") as String?)?.trim().orEmpty()
+    val baseUrl = when {
+        configuredBaseUrl.isBlank() -> "http://10.0.2.2:8080/"
+        configuredBaseUrl.endsWith("/") -> configuredBaseUrl
+        else -> "$configuredBaseUrl/"
+    }
 
     defaultConfig {
         applicationId = "com.ecoquest.app"
@@ -18,6 +55,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
         buildConfigField("String", "BASE_URL", "\"http://10.20.185.50:8080/\"")
     }
 
@@ -55,6 +93,7 @@ android {
 dependencies {
     // Core
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)

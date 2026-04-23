@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EcoQuest</string>
+    <string name="tab_home">Trang chu</string>
+    <string name="tab_tasks">Nhiem vu</string>
+    <string name="tab_ranking">Bang xep hang</string>
+    <string name="tab_ecobot">EcoBot</string>
+    <string name="tab_settings">Cai dat</string>
+
+    <string name="common_retry">Thu lai</string>
+    <string name="common_unknown_error">Loi khong xac dinh</string>
+    <string name="common_back">Quay lai</string>
+    <string name="error_network">Loi mang</string>
+
+    <string name="login_tagline">Cung nhau xanh hoa the gioi</string>
+    <string name="language_label">Ngon ngu</string>
+    <string name="language_english">Tieng Anh</string>
+    <string name="language_vietnamese">Tieng Viet</string>
+    <string name="settings_title">Cai dat</string>
+    <string name="settings_language_hint">Chon ngon ngu ung dung. Thay doi se ap dung ngay lap tuc.</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Mat khau</string>
+    <string name="cd_hide_password">An mat khau</string>
+    <string name="cd_show_password">Hien mat khau</string>
+    <string name="action_sign_in">Dang nhap</string>
+    <string name="login_demo_hint">Demo: nhap bat ky email va mat khau</string>
+    <string name="error_enter_email_password">Vui long nhap email va mat khau</string>
+    <string name="error_login_failed">Dang nhap that bai</string>
+
+    <string name="home_title">EcoQuest</string>
+    <string name="home_level_format">Cap do %1$d</string>
+    <string name="stat_credits">Diem thuong</string>
+    <string name="stat_streak">Chuoi ngay</string>
+    <string name="stat_tasks_done">Nhiem vu hoan thanh</string>
+    <string name="stat_rank">Hang</string>
+    <string name="streak_days_format">%1$d ngay</string>
+    <string name="action_view_daily_tasks">Xem nhiem vu hom nay</string>
+    <string name="member_since_format">Tham gia tu %1$s</string>
+
+    <string name="task_list_title">Nhiem vu hang ngay</string>
+    <string name="task_list_heading">Nhiem vu xanh hom nay</string>
+    <string name="reward_credits_format">+%1$d diem thuong</string>
+    <string name="submission_created_format">Da tao gui bang chung: %1$s</string>
+    <string name="error_failed_load_tasks">Khong tai duoc danh sach nhiem vu</string>
+    <string name="error_submit_failed">Gui that bai</string>
+    <string name="action_submit">Gui</string>
+
+    <string name="leaderboard_title">Bang xep hang</string>
+    <string name="credits_label">diem</string>
+    <string name="level_format">Cap do %1$d</string>
+    <string name="error_failed_load_leaderboard">Khong tai duoc bang xep hang</string>
+
+    <string name="chat_title">EcoBot</string>
+    <string name="chat_subtitle">Tro ly song xanh cua ban</string>
+    <string name="chat_placeholder">Hoi meo song xanh...</string>
+    <string name="chat_typing">Dang tra loi...</string>
+    <string name="chat_try_asking">Thu hoi:</string>
+    <string name="cd_send">Gui</string>
+    <string-array name="chat_suggestions">
+        <item>Lam sao de tai che?</item>
+        <item>Meo tiet kiem nuoc</item>
+        <item>Cach tiet kiem dien tai nha</item>
+        <item>Vi sao nen trong cay?</item>
+        <item>Meo di chuyen xanh</item>
+        <item>Cach kiem diem thuong?</item>
+        <item>Su dung ung dung nhu the nao?</item>
+    </string-array>
+
+    <string name="task_detail_title">Chi tiet nhiem vu</string>
+    <string name="section_description">Mo ta</string>
+    <string name="section_reward">Thuong</string>
+    <string name="section_location">Vi tri</string>
+    <string name="action_submit_proof">Gui bang chung</string>
+    <string name="error_task_not_found">Khong tim thay nhiem vu</string>
+    <string name="error_failed_to_load">Khong tai duoc du lieu</string>
+
+    <string name="submit_proof_title">Gui bang chung</string>
+    <string name="prompt_take_or_select_photo">Chup anh hoac chon anh</string>
+    <string name="action_camera">May anh</string>
+    <string name="action_gallery">Thu vien</string>
+    <string name="submission_sent">Da gui thanh cong!</string>
+    <string name="submission_reviewing">Bang chung cua ban dang duoc xem xet</string>
+    <string name="submitted_done">Da gui!</string>
+    <string name="cd_proof_photo">Anh bang chung</string>
+    <string name="error_submission_failed">Gui bang chung that bai</string>
+    <string name="error_failed_create_submission">Khong tao duoc luot gui</string>
+</resources>

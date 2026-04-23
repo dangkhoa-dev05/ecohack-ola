@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -16,8 +17,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,8 +28,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ecoquest.app.ui.theme.EcoGold
+import com.ecoquest.app.R
+import com.ecoquest.app.ui.theme.EcoDimens
+import com.ecoquest.app.ui.theme.EcoForest
 import com.ecoquest.app.ui.theme.EcoGreen
+import com.ecoquest.app.ui.theme.EcoMint
 import com.ecoquest.app.ui.viewmodel.SubmissionRetryStage
 import com.ecoquest.app.ui.viewmodel.SubmitProofViewModel
 import java.io.File
@@ -42,10 +48,8 @@ fun SubmitProofScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Camera URI
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
@@ -54,7 +58,6 @@ fun SubmitProofScreen(
         }
     }
 
-    // Gallery picker
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -63,7 +66,6 @@ fun SubmitProofScreen(
         }
     }
 
-    // Camera permission
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -80,21 +82,28 @@ fun SubmitProofScreen(
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color(0xFFEAF4EA),
         topBar = {
             TopAppBar(
-                title = { Text("Submit Proof") },
+                title = {
+                    Text(
+                        text = stringResource(R.string.submit_proof_title),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = androidx.compose.ui.graphics.Color(0xFF1F3D27)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFEAF4EA),
+                    titleContentColor = androidx.compose.ui.graphics.Color(0xFF1F3D27)
                 )
             )
         }
@@ -103,34 +112,38 @@ fun SubmitProofScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(androidx.compose.ui.graphics.Color(0xFFEAF4EA))
+                .padding(horizontal = EcoDimens.ScreenHorizontal, vertical = EcoDimens.ScreenVertical),
+            verticalArrangement = Arrangement.spacedBy(EcoDimens.SectionGap)
         ) {
-            // Task info
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Task,
-                        contentDescription = null,
-                        tint = EcoGreen,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Text("📸", fontSize = 28.sp)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = taskTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = taskTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = androidx.compose.ui.graphics.Color(0xFF2D4739)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Take or select a photo",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = androidx.compose.ui.graphics.Color(0xFF7A8C7E)
+                        )
+                    }
                 }
             }
 
-            // Photo area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,16 +152,16 @@ fun SubmitProofScreen(
                     .border(
                         width = 2.dp,
                         color = if (uiState.photoUri != null) EcoGreen
-                        else MaterialTheme.colorScheme.outlineVariant,
+                        else androidx.compose.ui.graphics.Color(0xFFDDD),
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(if (uiState.photoUri != null) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color(0xFFF1F1F1)),
                 contentAlignment = Alignment.Center
             ) {
                 if (uiState.photoUri != null) {
                     AsyncImage(
                         model = uiState.photoUri,
-                        contentDescription = "Proof photo",
+                        contentDescription = stringResource(R.string.cd_proof_photo),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(16.dp)),
@@ -156,68 +169,66 @@ fun SubmitProofScreen(
                     )
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.AddAPhoto,
-                            contentDescription = null,
-                            modifier = Modifier.size(56.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Take or select a photo",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "📷",
+                            fontSize = 56.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.prompt_take_or_select_photo),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = androidx.compose.ui.graphics.Color(0xFF7A8C7E),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
             }
 
-            // Photo action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
-                    onClick = {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    },
+                    onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    border = BorderStroke(1.5f.dp, EcoGreen)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Text("📷", fontSize = 18.sp)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Camera")
+                    Text(stringResource(R.string.action_camera))
                 }
                 OutlinedButton(
                     onClick = { galleryLauncher.launch("image/*") },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    border = BorderStroke(1.5f.dp, EcoGreen)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoLibrary,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Text("🖼️", fontSize = 18.sp)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Gallery")
+                    Text(stringResource(R.string.action_gallery))
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Status messages
             if (uiState.error != null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = androidx.compose.ui.graphics.Color(0xFFFFEBEE)
                     )
                 ) {
+                    Row(modifier = Modifier.padding(16.dp)) {
+                        Text("❌", fontSize = 20.sp, modifier = Modifier.padding(end = 8.dp))
+                        Text(
+                            text = uiState.error!!,
+                            color = androidx.compose.ui.graphics.Color(0xFFC62828),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -265,9 +276,9 @@ fun SubmitProofScreen(
             if (uiState.submitted) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = EcoGreen.copy(alpha = 0.1f)
+                        containerColor = androidx.compose.ui.graphics.Color(0xFFE8F5E9)
                     )
                 ) {
                     Column(
@@ -276,30 +287,23 @@ fun SubmitProofScreen(
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = EcoGreen,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("✅", fontSize = 48.sp, modifier = Modifier.padding(bottom = 8.dp))
                         Text(
-                            text = "Submission sent!",
+                            text = stringResource(R.string.submission_sent),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = EcoGreen
                         )
                         Text(
-                            text = "Your proof is being reviewed",
+                            text = stringResource(R.string.submission_reviewing),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = androidx.compose.ui.graphics.Color(0xFF7A8C7E),
                             textAlign = TextAlign.Center
                         )
                     }
                 }
             }
 
-            // Submit button
             Button(
                 onClick = {
                     if (uiState.canRetry) {
@@ -310,9 +314,9 @@ fun SubmitProofScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EcoGreen),
+                    .height(EcoDimens.LargeActionHeight),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF5D842B)),
                 enabled = uiState.photoUri != null && !uiState.isLoading && !uiState.submitted
             ) {
                 if (uiState.isLoading) {
@@ -329,10 +333,10 @@ fun SubmitProofScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = when {
-                            uiState.submitted -> "Submitted!"
-                            uiState.canRetry -> "Retry Submission"
-                            else -> "Submit Proof"
+                        text = if (uiState.submitted) {
+                            stringResource(R.string.submitted_done)
+                        } else {
+                            stringResource(R.string.action_submit_proof)
                         },
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold

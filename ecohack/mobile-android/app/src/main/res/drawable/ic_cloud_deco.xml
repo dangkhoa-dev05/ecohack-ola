@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cute cloud shape for decorative background -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="70dp"
+    android:viewportWidth="120"
+    android:viewportHeight="70">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,55 C8,55 2,45 8,36 C4,33 4,24 12,22 C14,14 22,8 32,10 C38,4 50,2 58,10 C64,4 76,4 82,12 C92,10 104,18 102,30 C110,32 114,42 108,50 C104,58 94,60 86,56 C80,62 68,64 60,58 C52,64 38,64 30,58 C26,62 20,62 20,55 Z" />
+</vector>

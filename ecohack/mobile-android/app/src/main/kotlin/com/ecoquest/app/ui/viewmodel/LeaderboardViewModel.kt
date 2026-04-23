@@ -1,7 +1,10 @@
 package com.ecoquest.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.annotation.StringRes
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecoquest.app.R
 import com.ecoquest.app.data.api.RetrofitClient
 import com.ecoquest.app.data.model.LeaderboardEntryDto
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,18 +18,20 @@ data class LeaderboardUiState(
     val error: String? = null
 )
 
-class LeaderboardViewModel : ViewModel() {
+class LeaderboardViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(LeaderboardUiState())
     val uiState: StateFlow<LeaderboardUiState> = _uiState.asStateFlow()
 
-    private val api = RetrofitClient.api
+    private fun t(@StringRes id: Int, vararg args: Any): String {
+        return getApplication<Application>().getString(id, *args)
+    }
 
     fun loadLeaderboard() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = api.getLeaderboard()
+                val response = RetrofitClient.withFallback { api -> api.getLeaderboard() }
                 if (response.success && response.data != null) {
                     _uiState.value = _uiState.value.copy(
                         entries = response.data.sortedBy { it.rank },
@@ -34,13 +39,13 @@ class LeaderboardViewModel : ViewModel() {
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = response.error ?: "Failed to load leaderboard",
+                        error = response.error ?: t(R.string.error_failed_load_leaderboard),
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
+                    error = e.message ?: t(R.string.error_network),
                     isLoading = false
                 )
             }

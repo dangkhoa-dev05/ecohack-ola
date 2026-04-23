@@ -11,6 +11,11 @@ group = "com.ecoquest"
 version = "0.0.1-SNAPSHOT"
 description = "backend"
 
+// OneDrive marks files with reparse points and can break Gradle snapshotting.
+// Keep build outputs in LOCALAPPDATA where files are regular.
+val localBuildRoot = System.getenv("LOCALAPPDATA") ?: "C:/temp"
+layout.buildDirectory.set(file("$localBuildRoot/ecohack-backend-build"))
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)

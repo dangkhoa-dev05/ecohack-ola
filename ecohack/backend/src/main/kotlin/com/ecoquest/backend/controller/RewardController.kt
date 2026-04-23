@@ -13,6 +13,9 @@ class RewardController(
 ) {
 
     @GetMapping("/me/stats")
+    fun getStats(): ApiResponse<StatsDto> {
+        val base = mockUserStore.findById("user_001")
+            ?: return ApiResponse.error("User not found")
     fun getStats(authentication: Authentication): ApiResponse<StatsDto> {
         val base = mockUserStore.findById(authentication.name)
             ?: throw IllegalArgumentException("User ${authentication.name} not found")

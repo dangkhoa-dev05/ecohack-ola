@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="60dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+    <!-- Star shape -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M30,4 L34,20 L50,20 L38,30 L42,47 L30,37 L18,47 L22,30 L10,20 L26,20 Z" />
+    <!-- Inner highlight -->
+    <path
+        android:fillColor="#FFECB3"
+        android:pathData="M30,12 L33,22 L44,22 L36,28 L39,39 L30,33 L21,39 L24,28 L16,22 L27,22 Z"
+        android:fillAlpha="0.5" />
+</vector>

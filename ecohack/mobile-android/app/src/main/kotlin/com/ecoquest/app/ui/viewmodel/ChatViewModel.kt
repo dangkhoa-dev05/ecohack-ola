@@ -27,15 +27,13 @@ class ChatViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
-    private val api = RetrofitClient.api
-
     fun sendMessage(text: String) {
         val updatedMessages = _uiState.value.messages + ChatMessage(text, isUser = true)
         _uiState.value = _uiState.value.copy(messages = updatedMessages, isLoading = true)
 
         viewModelScope.launch {
             try {
-                val response = api.chat(ChatRequest(text))
+                val response = RetrofitClient.withFallback { api -> api.chat(ChatRequest(text)) }
                 if (response.success && response.data != null) {
                     val botReply = ChatMessage(response.data.reply, isUser = false)
                     _uiState.value = _uiState.value.copy(
