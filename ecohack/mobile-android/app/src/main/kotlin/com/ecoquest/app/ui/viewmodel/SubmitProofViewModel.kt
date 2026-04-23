@@ -11,11 +11,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+enum class SubmissionRetryStage {
+    INIT,
+    COMPLETE
+}
+
 data class SubmitProofUiState(
     val photoUri: Uri? = null,
     val isLoading: Boolean = false,
     val submitted: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val retryStage: SubmissionRetryStage? = null,
+    val canRetry: Boolean = false,
+    val pendingSubmissionId: String? = null
 )
 
 class SubmitProofViewModel : ViewModel() {
@@ -26,56 +34,99 @@ class SubmitProofViewModel : ViewModel() {
     private val api = RetrofitClient.api
 
     fun setPhotoUri(uri: Uri) {
-        _uiState.value = _uiState.value.copy(photoUri = uri, error = null)
+        _uiState.value = _uiState.value.copy(
+            photoUri = uri,
+            submitted = false,
+            error = null,
+            retryStage = null,
+            canRetry = false,
+            pendingSubmissionId = null
+        )
     }
 
     fun submit(taskId: String) {
-        if (_uiState.value.photoUri == null) return
+        val currentPhotoUri = _uiState.value.photoUri ?: return
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                error = null,
+                retryStage = null,
+                canRetry = false
+            )
             try {
-                // Step 1: Init submission
-                val initResp = api.initSubmission(
-                    InitSubmissionRequest(
-                        taskId = taskId,
-                        latitude = 10.7769,
-                        longitude = 106.7009
+                val submissionId = _uiState.value.pendingSubmissionId ?: run {
+                    val initResp = api.initSubmission(
+                        InitSubmissionRequest(
+                            taskId = taskId,
+                            latitude = 10.7769,
+                            longitude = 106.7009
+                        )
+                    )
+
+                    if (!initResp.success || initResp.data == null) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = initResp.error ?: "Failed to start upload",
+                            retryStage = SubmissionRetryStage.INIT,
+                            canRetry = true
+                        )
+                        return@launch
+                    }
+
+                    initResp.data.submissionId
+                }
+
+                _uiState.value = _uiState.value.copy(pendingSubmissionId = submissionId)
+
+                val completeResp = api.completeSubmission(
+                    submissionId,
+                    CompleteSubmissionRequest(
+                        imageUrl = currentPhotoUri.toString()
                     )
                 )
 
-                if (initResp.success && initResp.data != null) {
-                    // Step 2: Complete submission (mock image URL)
-                    val completeResp = api.completeSubmission(
-                        initResp.data.submissionId,
-                        CompleteSubmissionRequest(
-                            imageUrl = _uiState.value.photoUri.toString()
-                        )
+                if (completeResp.success) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        submitted = true,
+                        canRetry = false,
+                        retryStage = null,
+                        pendingSubmissionId = null
                     )
-
-                    if (completeResp.success) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            submitted = true
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            error = completeResp.error ?: "Submission failed"
-                        )
-                    }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = initResp.error ?: "Failed to create submission"
+                        error = completeResp.error ?: "Submission failed",
+                        retryStage = SubmissionRetryStage.COMPLETE,
+                        canRetry = true,
+                        pendingSubmissionId = submissionId
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Network error"
+                    error = e.message ?: "Network error",
+                    retryStage = if (_uiState.value.pendingSubmissionId != null) {
+                        SubmissionRetryStage.COMPLETE
+                    } else {
+                        SubmissionRetryStage.INIT
+                    },
+                    canRetry = true
                 )
             }
         }
+    }
+
+    fun retry(taskId: String) {
+        submit(taskId)
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(
+            error = null,
+            retryStage = null,
+            canRetry = false
+        )
     }
 }

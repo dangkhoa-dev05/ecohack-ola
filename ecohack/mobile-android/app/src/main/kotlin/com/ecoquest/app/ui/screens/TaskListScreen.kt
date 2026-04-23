@@ -2,12 +2,20 @@ package com.ecoquest.app.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import android.os.Environment
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -24,9 +32,6 @@ import com.ecoquest.app.data.model.TaskDto
 import com.ecoquest.app.ui.theme.EcoGold
 import com.ecoquest.app.ui.viewmodel.SubmissionResult
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Environment
 import androidx.core.content.ContextCompat
 import java.io.File
 
@@ -41,6 +46,7 @@ fun TaskListScreen(
 
     var pendingTask by remember { mutableStateOf<TaskDto?>(null) }
     var cameraUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var taskFeedInitialized by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -74,8 +80,36 @@ fun TaskListScreen(
         }
     }
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        taskFeedInitialized = true
+        if (granted) {
+            val location = context.findBestLastKnownLocation()
+            viewModel.loadTaskFeed(location?.latitude, location?.longitude)
+        } else {
+            viewModel.loadTaskFeed()
+        }
+    }
+
     LaunchedEffect(Unit) {
-        viewModel.loadDailyTasks()
+        if (!taskFeedInitialized) {
+            val hasLocationPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            taskFeedInitialized = true
+            if (hasLocationPermission) {
+                val location = context.findBestLastKnownLocation()
+                viewModel.loadTaskFeed(location?.latitude, location?.longitude)
+            } else {
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -153,17 +187,20 @@ fun TaskListScreen(
                 )
             }
             uiState.tasks.isEmpty() && uiState.error != null -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                     Text(
                         text = uiState.error ?: "Unknown error",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadDailyTasks() }) {
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        val location = context.findBestLastKnownLocation()
+                        viewModel.loadTaskFeed(location?.latitude, location?.longitude)
+                    }) {
                         Text("Retry")
                     }
                 }
@@ -175,7 +212,7 @@ fun TaskListScreen(
                 ) {
                     item {
                         Text(
-                            text = "Daily Tasks",
+                            text = uiState.feedTitle,
                             style = MaterialTheme.typography.headlineMedium,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -316,6 +353,21 @@ fun TaskCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (task.distanceKm != null) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${task.distanceKm} km away",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
                 Icon(
                     imageVector = Icons.Default.EmojiEvents,
                     contentDescription = null,
@@ -442,4 +494,26 @@ fun TaskCard(
             }
         }
     }
+}
+
+@SuppressLint("MissingPermission")
+private fun Context.findBestLastKnownLocation(): Location? {
+    val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        ?: return null
+
+    val providers = buildList {
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            add(LocationManager.GPS_PROVIDER)
+        }
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            add(LocationManager.NETWORK_PROVIDER)
+        }
+        if (locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER)) {
+            add(LocationManager.PASSIVE_PROVIDER)
+        }
+    }
+
+    return providers
+        .mapNotNull { provider -> runCatching { locationManager.getLastKnownLocation(provider) }.getOrNull() }
+        .maxByOrNull { it.time }
 }

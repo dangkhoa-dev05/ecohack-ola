@@ -14,6 +14,19 @@ class RewardController(
 
     @GetMapping("/me/stats")
     fun getStats(authentication: Authentication): ApiResponse<StatsDto> {
+        val base = mockUserStore.findById(authentication.name)
+            ?: throw IllegalArgumentException("User ${authentication.name} not found")
+        val grantedCredits = rewardService.getCredits(base.id)
+        val grantedStreak = rewardService.getStreak(base.id)
+
+        return ApiResponse.success(
+            StatsDto(
+                level = base.level,
+                credits = base.credits + grantedCredits,
+                streak = if (grantedStreak > 0) grantedStreak else base.streak,
+                tasksCompleted = (grantedCredits / 50).coerceAtLeast(0)
+            )
+        )
         return ApiResponse.success(profileService.getStats(authentication.name))
     }
 }

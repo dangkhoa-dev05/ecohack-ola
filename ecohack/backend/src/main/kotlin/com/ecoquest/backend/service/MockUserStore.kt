@@ -24,7 +24,7 @@ class MockUserStore {
                 level = 3,
                 credits = 250,
                 streak = 5,
-                totalTasksCompleted = 12,
+                totalTasksCompleted = 18,
                 joinDate = "2025-01-15"
             )
         ),
@@ -39,8 +39,8 @@ class MockUserStore {
                 level = 8,
                 credits = 920,
                 streak = 12,
-                totalTasksCompleted = 40,
-                joinDate = "2024-09-01"
+                totalTasksCompleted = 57,
+                joinDate = "2024-11-03"
             )
         )
     )

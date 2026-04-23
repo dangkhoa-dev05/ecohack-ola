@@ -9,8 +9,16 @@ import com.ecoquest.app.data.model.TaskDto
 class NetworkTaskRepository : TaskRepository {
     private val api = RetrofitClient.api
 
-    override suspend fun getDailyTasks(): List<TaskDto> {
-        val response = api.getDailyTasks()
+    override suspend fun getTasks(
+        latitude: Double?,
+        longitude: Double?
+    ): List<TaskDto> {
+        val response = if (latitude != null && longitude != null) {
+            api.getNearbyTasks(latitude, longitude)
+        } else {
+            api.getDailyTasks()
+        }
+
         if (!response.success || response.data == null) {
             throw IllegalStateException(response.error ?: "Failed to load tasks")
         }
@@ -43,4 +51,3 @@ class NetworkTaskRepository : TaskRepository {
         return completeResponse.data
     }
 }
-

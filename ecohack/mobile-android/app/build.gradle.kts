@@ -23,11 +23,13 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "true")
+            buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "false")
+            buildConfigField("boolean", "USE_FAKE_TASK_REPOSITORY", "false")
         }
         release {
             isMinifyEnabled = false
             buildConfigField("boolean", "USE_FAKE_USER_REPOSITORY", "false")
+            buildConfigField("boolean", "USE_FAKE_TASK_REPOSITORY", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
