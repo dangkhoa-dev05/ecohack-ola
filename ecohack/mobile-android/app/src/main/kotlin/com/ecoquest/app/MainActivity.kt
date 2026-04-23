@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.ecoquest.app.ui.locale.LanguageManager
 import com.ecoquest.app.ui.navigation.EcoQuestNavGraph
 import com.ecoquest.app.ui.theme.EcoQuestTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        LanguageManager.initialize(this)
         enableEdgeToEdge()
         setContent {
             EcoQuestTheme {

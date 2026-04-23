@@ -1,7 +1,10 @@
 package com.ecoquest.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.annotation.StringRes
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecoquest.app.R
 import com.ecoquest.app.data.api.RetrofitClient
 import com.ecoquest.app.data.model.StatsDto
 import com.ecoquest.app.data.model.UserDto
@@ -17,12 +20,14 @@ data class HomeUiState(
     val error: String? = null
 )
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private val api = RetrofitClient.api
+    private fun t(@StringRes id: Int, vararg args: Any): String {
+        return getApplication<Application>().getString(id, *args)
+    }
 
     init {
         loadHome()
@@ -32,8 +37,9 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val userResp = api.getMe()
-                val statsResp = api.getStats()
+                val (userResp, statsResp) = RetrofitClient.withFallback { api ->
+                    api.getMe() to api.getStats()
+                }
 
                 if (userResp.success && statsResp.success) {
                     _uiState.value = _uiState.value.copy(
@@ -43,13 +49,13 @@ class HomeViewModel : ViewModel() {
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = userResp.error ?: statsResp.error ?: "Failed to load",
+                        error = userResp.error ?: statsResp.error ?: t(R.string.error_failed_to_load),
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
+                    error = e.message ?: t(R.string.error_network),
                     isLoading = false
                 )
             }

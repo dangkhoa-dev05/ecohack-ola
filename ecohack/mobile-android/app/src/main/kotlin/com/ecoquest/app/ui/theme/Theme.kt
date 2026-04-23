@@ -5,25 +5,34 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Green80,
+    primary = EcoLeaf,
+    onPrimary = EcoTextDark,
     secondary = GreenGrey80,
-    tertiary = Teal80
+    tertiary = Teal80,
+    background = Color(0xFF0F1A16),
+    surface = Color(0xFF16231E),
+    surfaceVariant = Color(0xFF22342C)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Green40,
-    secondary = GreenGrey40,
+    primary = EcoForest,
+    onPrimary = Color.White,
+    secondary = EcoMint,
     tertiary = Teal40,
-    background = EcoBackground,
-    surface = EcoSurface
+    background = EcoSand,
+    surface = EcoSurface,
+    surfaceVariant = EcoSky,
+    onSurface = EcoTextDark,
+    onSurfaceVariant = Color(0xFF4A5E55)
 )
 
 @Composable
 fun EcoQuestTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

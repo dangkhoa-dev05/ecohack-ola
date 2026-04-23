@@ -1,8 +1,11 @@
 package com.ecoquest.app.ui.viewmodel
 
+import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
+import androidx.annotation.StringRes
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecoquest.app.R
 import com.ecoquest.app.data.api.RetrofitClient
 import com.ecoquest.app.data.model.CompleteSubmissionRequest
 import com.ecoquest.app.data.model.InitSubmissionRequest
@@ -18,12 +21,14 @@ data class SubmitProofUiState(
     val error: String? = null
 )
 
-class SubmitProofViewModel : ViewModel() {
+class SubmitProofViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(SubmitProofUiState())
     val uiState: StateFlow<SubmitProofUiState> = _uiState.asStateFlow()
 
-    private val api = RetrofitClient.api
+    private fun t(@StringRes id: Int, vararg args: Any): String {
+        return getApplication<Application>().getString(id, *args)
+    }
 
     fun setPhotoUri(uri: Uri) {
         _uiState.value = _uiState.value.copy(photoUri = uri, error = null)
@@ -35,24 +40,30 @@ class SubmitProofViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                // Step 1: Init submission
-                val initResp = api.initSubmission(
-                    InitSubmissionRequest(
-                        taskId = taskId,
-                        latitude = 10.7769,
-                        longitude = 106.7009
-                    )
-                )
-
-                if (initResp.success && initResp.data != null) {
-                    // Step 2: Complete submission (mock image URL)
-                    val completeResp = api.completeSubmission(
-                        initResp.data.submissionId,
-                        CompleteSubmissionRequest(
-                            imageUrl = _uiState.value.photoUri.toString()
+                val (initResp, completeResp) = RetrofitClient.withFallback { api ->
+                    val initResponse = api.initSubmission(
+                        InitSubmissionRequest(
+                            taskId = taskId,
+                            latitude = 10.7769,
+                            longitude = 106.7009
                         )
                     )
 
+                    val completeResponse = if (initResponse.success && initResponse.data != null) {
+                        api.completeSubmission(
+                            initResponse.data.submissionId,
+                            CompleteSubmissionRequest(
+                                imageUrl = _uiState.value.photoUri.toString()
+                            )
+                        )
+                    } else {
+                        null
+                    }
+
+                    initResponse to completeResponse
+                }
+
+                if (initResp.success && initResp.data != null && completeResp != null) {
                     if (completeResp.success) {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -61,19 +72,19 @@ class SubmitProofViewModel : ViewModel() {
                     } else {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = completeResp.error ?: "Submission failed"
+                            error = completeResp.error ?: t(R.string.error_submission_failed)
                         )
                     }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = initResp.error ?: "Failed to create submission"
+                        error = initResp.error ?: t(R.string.error_failed_create_submission)
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Network error"
+                    error = e.message ?: t(R.string.error_network)
                 )
             }
         }

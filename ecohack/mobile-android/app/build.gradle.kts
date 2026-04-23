@@ -9,6 +9,13 @@ android {
     namespace = "com.ecoquest.app"
     compileSdk = 36
 
+    val configuredBaseUrl = (project.findProperty("BASE_URL") as String?)?.trim().orEmpty()
+    val baseUrl = when {
+        configuredBaseUrl.isBlank() -> "http://10.0.2.2:8080/"
+        configuredBaseUrl.endsWith("/") -> configuredBaseUrl
+        else -> "$configuredBaseUrl/"
+    }
+
     defaultConfig {
         applicationId = "com.ecoquest.app"
         minSdk = 26
@@ -18,7 +25,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
     buildTypes {
@@ -49,6 +56,7 @@ android {
 dependencies {
     // Core
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)

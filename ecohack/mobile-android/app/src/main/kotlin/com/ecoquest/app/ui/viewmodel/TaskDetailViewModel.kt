@@ -1,7 +1,10 @@
 package com.ecoquest.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.annotation.StringRes
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecoquest.app.R
 import com.ecoquest.app.data.api.RetrofitClient
 import com.ecoquest.app.data.model.TaskDto
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,18 +18,20 @@ data class TaskDetailUiState(
     val error: String? = null
 )
 
-class TaskDetailViewModel : ViewModel() {
+class TaskDetailViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(TaskDetailUiState())
     val uiState: StateFlow<TaskDetailUiState> = _uiState.asStateFlow()
 
-    private val api = RetrofitClient.api
+    private fun t(@StringRes id: Int, vararg args: Any): String {
+        return getApplication<Application>().getString(id, *args)
+    }
 
     fun loadTask(taskId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = api.getTaskById(taskId)
+                val response = RetrofitClient.withFallback { api -> api.getTaskById(taskId) }
                 if (response.success && response.data != null) {
                     _uiState.value = _uiState.value.copy(
                         task = response.data,
@@ -34,13 +39,13 @@ class TaskDetailViewModel : ViewModel() {
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = response.error ?: "Task not found",
+                        error = response.error ?: t(R.string.error_task_not_found),
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
+                    error = e.message ?: t(R.string.error_network),
                     isLoading = false
                 )
             }

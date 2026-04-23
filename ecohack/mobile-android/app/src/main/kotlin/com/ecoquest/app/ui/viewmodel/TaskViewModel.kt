@@ -1,7 +1,10 @@
 package com.ecoquest.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.annotation.StringRes
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ecoquest.app.R
 import com.ecoquest.app.data.api.RetrofitClient
 import com.ecoquest.app.data.model.InitSubmissionRequest
 import com.ecoquest.app.data.model.TaskDto
@@ -17,18 +20,20 @@ data class TaskUiState(
     val submitMessage: String? = null
 )
 
-class TaskViewModel : ViewModel() {
+class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
-    private val api = RetrofitClient.api
+    private fun t(@StringRes id: Int, vararg args: Any): String {
+        return getApplication<Application>().getString(id, *args)
+    }
 
     fun loadDailyTasks() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = api.getDailyTasks()
+                val response = RetrofitClient.withFallback { api -> api.getDailyTasks() }
                 if (response.success && response.data != null) {
                     _uiState.value = _uiState.value.copy(
                         tasks = response.data,
@@ -36,13 +41,13 @@ class TaskViewModel : ViewModel() {
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = response.error ?: "Failed to load tasks",
+                        error = response.error ?: t(R.string.error_failed_load_tasks),
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Network error",
+                    error = e.message ?: t(R.string.error_network),
                     isLoading = false
                 )
             }
@@ -53,21 +58,26 @@ class TaskViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(submitMessage = null)
             try {
-                val response = api.initSubmission(
-                    InitSubmissionRequest(
-                        taskId = task.id,
-                        latitude = task.latitude,
-                        longitude = task.longitude
+                val response = RetrofitClient.withFallback { api ->
+                    api.initSubmission(
+                        InitSubmissionRequest(
+                            taskId = task.id,
+                            latitude = task.latitude,
+                            longitude = task.longitude
+                        )
                     )
-                )
+                }
                 if (response.success && response.data != null) {
                     _uiState.value = _uiState.value.copy(
-                        submitMessage = "Submission created: ${response.data.submissionId}"
+                        submitMessage = t(
+                            R.string.submission_created_format,
+                            response.data.submissionId
+                        )
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Submit failed"
+                    error = e.message ?: t(R.string.error_submit_failed)
                 )
             }
         }
