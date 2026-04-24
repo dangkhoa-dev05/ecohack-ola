@@ -12,8 +12,8 @@ class TaskService {
     private val tasks = listOf(
         Task(
             id = "task_001",
-            title = "Nhặt rác công viên",
-            description = "Thu gom rác tại công viên gần bạn và chụp ảnh kết quả",
+            title = "Pick Up Litter",
+            description = "Collect trash at a nearby park and take a photo of the result",
             rewardCredits = 50,
             latitude = 10.7769,
             longitude = 106.7009,
@@ -21,8 +21,8 @@ class TaskService {
         ),
         Task(
             id = "task_002",
-            title = "Trồng cây xanh",
-            description = "Trồng ít nhất 1 cây xanh tại khu vực được chỉ định",
+            title = "Plant a Tree",
+            description = "Plant at least one tree in a designated area",
             rewardCredits = 100,
             latitude = 10.7800,
             longitude = 106.6950,
@@ -30,8 +30,8 @@ class TaskService {
         ),
         Task(
             id = "task_003",
-            title = "Phân loại rác tái chế",
-            description = "Phân loại và mang rác tái chế đến điểm thu gom",
+            title = "Sort Recyclables",
+            description = "Sort and bring recyclable waste to a collection point",
             rewardCredits = 30,
             latitude = 10.7730,
             longitude = 106.7050,
@@ -39,8 +39,8 @@ class TaskService {
         ),
         Task(
             id = "task_004",
-            title = "Dọn dẹp bãi biển",
-            description = "Tham gia dọn dẹp bãi biển cùng cộng đồng",
+            title = "Beach Cleanup",
+            description = "Join the community beach cleanup event",
             rewardCredits = 80,
             latitude = 10.3460,
             longitude = 107.0843,

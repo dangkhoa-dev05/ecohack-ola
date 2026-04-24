@@ -61,8 +61,8 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
@@ -76,6 +76,7 @@ import com.ecoquest.app.R
 import com.ecoquest.app.data.model.TaskDto
 import com.ecoquest.app.ui.components.AnimatedNatureBackdrop
 import com.ecoquest.app.ui.components.NatureBackdropStyle
+import com.ecoquest.app.ui.theme.EcoGold
 import com.ecoquest.app.ui.viewmodel.TaskViewModel
 import kotlin.math.roundToInt
 import androidx.core.content.ContextCompat
@@ -93,6 +94,7 @@ fun TaskListScreen(
 
     var pendingTask by remember { mutableStateOf<TaskDto?>(null) }
     var cameraUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var showImageSourceDialog by remember { mutableStateOf(false) }
     var taskFeedInitialized by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -110,6 +112,7 @@ fun TaskListScreen(
     ) { uri ->
         val task = pendingTask
         pendingTask = null
+        showImageSourceDialog = false
         if (uri != null && task != null) {
             viewModel.submitTask(task, uri.toString())
         }
@@ -123,6 +126,7 @@ fun TaskListScreen(
         } else {
             pendingTask = null
             cameraUri = null
+            showImageSourceDialog = false
             viewModel.setError("Camera permission denied")
         }
     }
@@ -167,7 +171,7 @@ fun TaskListScreen(
         (listState.firstVisibleItemIndex * 84 + listState.firstVisibleItemScrollOffset) * 0.18f
     val scrollReactiveInfluence = if (listState.isScrollInProgress) scrollImpulse else 0f
 
-    LaunchedEffect(Unit) { viewModel.loadDailyTasks() }
+    LaunchedEffect(Unit) { viewModel.loadTaskFeed() }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -206,6 +210,55 @@ fun TaskListScreen(
         )
     }
 
+    if (showImageSourceDialog && pendingTask != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showImageSourceDialog = false
+                pendingTask = null
+                cameraUri = null
+            },
+            title = { Text("Submit proof") },
+            text = { Text("Choose an image source") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val file = File(context.cacheDir, "eco_task_${System.currentTimeMillis()}.jpg")
+                    cameraUri = androidx.core.content.FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        file
+                    )
+                    val hasCameraPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CAMERA
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (hasCameraPermission) {
+                        cameraUri?.let { cameraLauncher.launch(it) }
+                    } else {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                }) {
+                    Text("Camera")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        galleryLauncher.launch("image/*")
+                    }) {
+                        Text("Gallery")
+                    }
+                    TextButton(onClick = {
+                        showImageSourceDialog = false
+                        pendingTask = null
+                        cameraUri = null
+                    }) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
     Scaffold(
         containerColor = Color(0xFFEAF4EA),
         topBar = {
@@ -226,66 +279,15 @@ fun TaskListScreen(
                                 tint = Color(0xFF1F3D27)
                             )
                         }
-    Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            uiState.tasks.isEmpty() && uiState.error != null -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                    Text(
-                        text = uiState.error ?: "Unknown error",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = {
-                        val location = context.findBestLastKnownLocation()
-                        viewModel.loadTaskFeed(location?.latitude, location?.longitude)
-                    }) {
-                        Text("Retry")
-                    }
                 }
-            }
-            else -> {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    item {
-                        Text(
-                            text = uiState.feedTitle,
-                            style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-                    items(uiState.tasks) { task ->
-                        TaskCard(
-                            task = task,
-                            isSubmitting = uiState.submittingTaskId == task.id,
-                            submissionState = uiState.taskStates[task.id],
-                            onClick = { onTaskClick(task.id) },
-                            onSubmitWithPhoto = {
-                                viewModel.openCameraSheet(task)
-                            },
-                            onSubmitWithoutPhoto = {
-                                viewModel.submitTask(task, null)
-                            }
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFEAF4EA)
-                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color(0xFFEAF4EA)
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
+        )
+    },
+    snackbarHost = { SnackbarHost(snackbarHostState) }
+) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -310,7 +312,7 @@ fun TaskListScreen(
                     ) {
                         Text("No tasks yet")
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.loadDailyTasks() }) {
+                        Button(onClick = { viewModel.loadTaskFeed() }) {
                             Text(stringResource(R.string.common_retry))
                         }
                     }
@@ -335,7 +337,10 @@ fun TaskListScreen(
                                 task = task,
                                 isSubmitting = uiState.submittingTaskId == task.id,
                                 onClick = { onTaskClick(task.id) },
-                                onSubmit = { viewModel.submitTask(task, null) }
+                                onSubmit = {
+                                    pendingTask = task
+                                    showImageSourceDialog = true
+                                }
                             )
                         }
                     }
@@ -525,6 +530,8 @@ private fun taskAccentColor(category: String): Color {
         "ENERGY" -> Color(0xFFE08A2E)
         else -> Color(0xFF5D842B)
     }
+}
+
 @SuppressLint("MissingPermission")
 private fun Context.findBestLastKnownLocation(): Location? {
     val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager

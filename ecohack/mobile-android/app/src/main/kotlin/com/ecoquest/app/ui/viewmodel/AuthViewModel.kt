@@ -33,7 +33,6 @@ class AuthViewModel(
     init {
         Log.d(TAG, "AuthViewModel initialized with userRepository: ${userRepository.javaClass.simpleName}")
         observeCurrentUser()
-        loadCurrentUser()
     }
 
     private fun observeCurrentUser() {

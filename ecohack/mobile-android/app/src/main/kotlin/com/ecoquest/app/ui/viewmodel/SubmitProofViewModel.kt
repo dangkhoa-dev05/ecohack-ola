@@ -97,26 +97,6 @@ class SubmitProofViewModel(application: Application) : AndroidViewModel(applicat
                         return@launch
                     }
 
-                    initResp.data.submissionId
-                }
-
-                _uiState.value = _uiState.value.copy(pendingSubmissionId = submissionId)
-
-                val completeResp = api.completeSubmission(
-                    submissionId,
-                    CompleteSubmissionRequest(
-                        imageUrl = currentPhotoUri.toString()
-                    )
-                )
-
-                if (completeResp.success) {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        submitted = true,
-                        canRetry = false,
-                        retryStage = null,
-                        pendingSubmissionId = null
-                    )
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,

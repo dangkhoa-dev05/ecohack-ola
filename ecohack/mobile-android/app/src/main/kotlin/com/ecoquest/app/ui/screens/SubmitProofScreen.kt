@@ -222,13 +222,6 @@ fun SubmitProofScreen(
                         containerColor = androidx.compose.ui.graphics.Color(0xFFFFEBEE)
                     )
                 ) {
-                    Row(modifier = Modifier.padding(16.dp)) {
-                        Text("❌", fontSize = 20.sp, modifier = Modifier.padding(end = 8.dp))
-                        Text(
-                            text = uiState.error!!,
-                            color = androidx.compose.ui.graphics.Color(0xFFC62828),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
