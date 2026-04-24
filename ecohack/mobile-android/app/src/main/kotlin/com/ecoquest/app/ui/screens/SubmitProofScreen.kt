@@ -43,12 +43,27 @@ fun SubmitProofScreen(
     taskId: String,
     taskTitle: String,
     onBack: () -> Unit,
+    onSubmitResult: (status: String) -> Unit = {},
     viewModel: SubmitProofViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var hadError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.submitted) {
+        if (uiState.submitted) {
+            kotlinx.coroutines.delay(1500)
+            onSubmitResult("APPROVED")
+        }
+    }
+
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            hadError = true
+        }
+    }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
@@ -93,7 +108,12 @@ fun SubmitProofScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        if (hadError && !uiState.submitted) {
+                            onSubmitResult("REJECTED")
+                        }
+                        onBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.common_back),
@@ -222,13 +242,6 @@ fun SubmitProofScreen(
                         containerColor = androidx.compose.ui.graphics.Color(0xFFFFEBEE)
                     )
                 ) {
-                    Row(modifier = Modifier.padding(16.dp)) {
-                        Text("❌", fontSize = 20.sp, modifier = Modifier.padding(end = 8.dp))
-                        Text(
-                            text = uiState.error!!,
-                            color = androidx.compose.ui.graphics.Color(0xFFC62828),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -236,6 +249,7 @@ fun SubmitProofScreen(
                         Text(
                             text = when (uiState.retryStage) {
                                 SubmissionRetryStage.INIT -> "Could not start the submission."
+                                SubmissionRetryStage.UPLOAD -> "Photo upload to cloud failed."
                                 SubmissionRetryStage.COMPLETE -> "Upload finished, but final submission failed."
                                 null -> "Submission failed."
                             },
@@ -263,6 +277,7 @@ fun SubmitProofScreen(
                                 Text(
                                     text = when (uiState.retryStage) {
                                         SubmissionRetryStage.INIT -> "Retry Start"
+                                        SubmissionRetryStage.UPLOAD -> "Retry Upload"
                                         SubmissionRetryStage.COMPLETE -> "Retry Submit"
                                         null -> "Retry"
                                     }

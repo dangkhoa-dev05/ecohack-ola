@@ -33,18 +33,28 @@ import com.ecoquest.app.ui.screens.LeaderboardScreen
 import com.ecoquest.app.ui.screens.LoginScreen
 import com.ecoquest.app.ui.screens.ProfileScreen
 import com.ecoquest.app.ui.screens.SubmissionHistoryScreen
+import com.ecoquest.app.ui.screens.SubmitProofScreen
+import com.ecoquest.app.ui.screens.TaskDetailScreen
 import com.ecoquest.app.ui.screens.TaskListScreen
 import com.ecoquest.app.ui.viewmodel.AuthViewModel
+import com.ecoquest.app.ui.viewmodel.TaskViewModel
 
 object Routes {
     const val LOGIN = "login"
     const val HOME = "home"
     const val TASKS = "tasks"
+    const val TASK_DETAIL = "task_detail/{taskId}"
+    const val SUBMIT_PROOF = "submit_proof/{taskId}/{taskTitle}"
     const val LEADERBOARD = "leaderboard"
     const val HISTORY = "history"
     const val CHAT = "chat"
     const val PROFILE = "profile"
+
+    fun taskDetail(taskId: String) = "task_detail/$taskId"
+    fun submitProof(taskId: String, taskTitle: String) = "submit_proof/$taskId/${taskTitle.encodeForNav()}"
 }
+
+private fun String.encodeForNav() = java.net.URLEncoder.encode(this, "UTF-8")
 
 data class BottomNavItem(
     val route: String,
@@ -64,6 +74,7 @@ private val bottomNavItems = listOf(
 @Composable
 fun EcoQuestNavGraph() {
     val navController = rememberNavController()
+    val taskViewModel: TaskViewModel = viewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute != Routes.LOGIN
@@ -137,7 +148,40 @@ fun EcoQuestNavGraph() {
                     }
                 )
             }
-            composable(Routes.TASKS) { TaskListScreen() }
+            composable(Routes.TASKS) {
+                TaskListScreen(
+                    viewModel = taskViewModel,
+                    onTaskClick = { taskId ->
+                        navController.navigate(Routes.taskDetail(taskId))
+                    }
+                )
+            }
+            composable(Routes.TASK_DETAIL) { backStackEntry ->
+                val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
+                TaskDetailScreen(
+                    taskId = taskId,
+                    onBack = { navController.popBackStack() },
+                    onSubmitProof = { id, title ->
+                        navController.navigate(Routes.submitProof(id, title))
+                    }
+                )
+            }
+            composable(Routes.SUBMIT_PROOF) { backStackEntry ->
+                val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
+                val taskTitle = java.net.URLDecoder.decode(
+                    backStackEntry.arguments?.getString("taskTitle") ?: "", "UTF-8"
+                )
+                SubmitProofScreen(
+                    taskId = taskId,
+                    taskTitle = taskTitle,
+                    onBack = { navController.popBackStack() },
+                    onSubmitResult = {
+                        navController.navigate(Routes.TASKS) {
+                            popUpTo(Routes.TASKS) { inclusive = false }
+                        }
+                    }
+                )
+            }
             composable(Routes.LEADERBOARD) { LeaderboardScreen() }
             composable(Routes.HISTORY) { SubmissionHistoryScreen() }
             composable(Routes.CHAT) { ChatScreen() }

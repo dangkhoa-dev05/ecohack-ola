@@ -26,7 +26,8 @@ data class TaskUiState(
     val error: String? = null,
     val feedTitle: String = "Daily Tasks",
     val submittingTaskId: String? = null,
-    val submissionResult: SubmissionResult? = null
+    val submissionResult: SubmissionResult? = null,
+    val taskStates: Map<String, String> = emptyMap()
 )
 
 class TaskViewModel : ViewModel() {
@@ -83,8 +84,11 @@ class TaskViewModel : ViewModel() {
                     }
                 }
 
+                val newTaskStates = _uiState.value.taskStates.toMutableMap()
+                newTaskStates[task.id] = result.status
                 _uiState.value = _uiState.value.copy(
                     submittingTaskId = null,
+                    taskStates = newTaskStates,
                     submissionResult = SubmissionResult(
                         isApproved = approved,
                         credits = result.rewardCredits,
@@ -99,6 +103,12 @@ class TaskViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    fun markTaskState(taskId: String, status: String) {
+        val newTaskStates = _uiState.value.taskStates.toMutableMap()
+        newTaskStates[taskId] = status
+        _uiState.value = _uiState.value.copy(taskStates = newTaskStates)
     }
 
     fun dismissResult() {
