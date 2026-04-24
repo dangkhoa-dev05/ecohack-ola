@@ -27,6 +27,7 @@ repositories {
 }
 
 dependencies {
+	implementation("com.azure:azure-storage-blob:12.29.0")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
