@@ -1,14 +1,5 @@
 package com.ecoquest.app.data.api
 
-object AuthTokenStore {
-    @Volatile
-    private var token: String? = null
-
-    fun getToken(): String? = token
-
-    fun setToken(value: String?) {
-        token = value
-    }
 import android.content.Context
 
 object AuthTokenStore {
@@ -28,10 +19,7 @@ object AuthTokenStore {
 
     fun getToken(): String? {
         val token = cachedToken
-        if (token != null) {
-            return token
-        }
-
+        if (token != null) return token
         val persistedToken = prefs().getString(KEY_TOKEN, null)
         cachedToken = persistedToken
         return persistedToken
@@ -39,10 +27,7 @@ object AuthTokenStore {
 
     fun setToken(token: String?) {
         cachedToken = token
-        prefs()
-            .edit()
-            .putString(KEY_TOKEN, token)
-            .apply()
+        prefs().edit().putString(KEY_TOKEN, token).apply()
     }
 
     private fun prefs() = requireNotNull(applicationContext) {

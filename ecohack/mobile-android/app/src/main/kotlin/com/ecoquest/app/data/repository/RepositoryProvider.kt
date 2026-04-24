@@ -23,16 +23,15 @@ object RepositoryProvider {
 
     val taskRepository: TaskRepository by lazy {
         try {
-            if (BuildConfig.USE_FAKE_USER_REPOSITORY) {
-                Log.d(TAG, "Initializing FakeTaskRepository (USE_FAKE_USER_REPOSITORY=true)")
+            if (BuildConfig.USE_FAKE_TASK_REPOSITORY) {
+                Log.d(TAG, "Initializing FakeTaskRepository (USE_FAKE_TASK_REPOSITORY=true)")
                 FakeTaskRepository()
             } else {
-                Log.d(TAG, "Initializing NetworkTaskRepository (USE_FAKE_USER_REPOSITORY=false)")
+                Log.d(TAG, "Initializing NetworkTaskRepository (USE_FAKE_TASK_REPOSITORY=false)")
                 NetworkTaskRepository()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize taskRepository, falling back to FakeTaskRepository", e)
-        if (BuildConfig.USE_FAKE_TASK_REPOSITORY) {
             FakeTaskRepository()
         }
     }
