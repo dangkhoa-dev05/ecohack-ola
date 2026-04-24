@@ -1,6 +1,5 @@
 .idea/
 
-.cursor/
 
 /build
 .gradle
@@ -9,5 +8,4 @@
 
 application.properties
 
-.cursor/
-
+.env
