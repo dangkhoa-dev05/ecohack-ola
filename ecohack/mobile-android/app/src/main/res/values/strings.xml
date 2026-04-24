@@ -84,4 +84,6 @@
     <string name="cd_proof_photo">Proof photo</string>
     <string name="error_submission_failed">Submission failed</string>
     <string name="error_failed_create_submission">Failed to create submission</string>
+    <string name="error_upload_failed">Failed to upload photo to cloud</string>
+    <string name="error_read_photo">Cannot read photo from device</string>
 </resources>
