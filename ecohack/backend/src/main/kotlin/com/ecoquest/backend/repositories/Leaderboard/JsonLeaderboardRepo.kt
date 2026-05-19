@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class JsonLeaderboardRepo ( private val objectMapper: ObjectMapper ) : LeaderboardRepo {
 
-    private val filePath = "./mock/leaderboard.json"
+    private val filePath = "mock/leaderboard.json"
     override fun findAll(): List<Leaderboard> {
         val resource = ClassPathResource(filePath)
 
